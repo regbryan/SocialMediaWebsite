@@ -1,0 +1,260 @@
+@import "tailwindcss";
+
+:root {
+  --bg-main: #07070e;
+  --bg-alt: #090912;
+  --bg-card: #0f0f1a;
+  --border-color: #1a1a2e;
+  --purple: #8b5cff;
+  --blue: #3b81ff;
+  --text-medium: #bfbfcc;
+  --text-muted: #9999a6;
+  --text-light-purple: #b18bff;
+  --bg-dark-purple: #261a40;
+  --bg-tag: #332659;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: white;
+  font-family: var(--font-inter), Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-feature-settings: "cv11", "ss01", "ss03";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #07070e;
+}
+::-webkit-scrollbar-thumb {
+  background: #1a1a2e;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8b5cff;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(120deg, #b18bff 0%, #8b5cff 50%, #3b81ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Gradient button with glow */
+.btn-gradient {
+  background: linear-gradient(120deg, #8b5cff, #3b81ff);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.2s ease;
+  box-shadow: 0 4px 24px rgba(139, 92, 255, 0.25);
+}
+.btn-gradient:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 32px rgba(139, 92, 255, 0.45);
+}
+.btn-gradient:active {
+  transform: translateY(0);
+}
+
+/* Ghost button */
+.btn-ghost {
+  transition: all 0.25s ease;
+}
+.btn-ghost:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  border-color: rgba(139, 92, 255, 0.4) !important;
+}
+
+/* Card hover */
+.card-hover {
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+/* Portfolio card image hover */
+.portfolio-card {
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+.portfolio-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+.portfolio-card .portfolio-img {
+  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.portfolio-card:hover .portfolio-img {
+  transform: scale(1.06);
+}
+.portfolio-card .preview-overlay {
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.portfolio-card:hover .preview-overlay {
+  opacity: 1;
+}
+
+/* Preview button */
+.preview-btn {
+  background: rgba(15, 15, 26, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+.preview-btn:hover {
+  background: white;
+  color: #07070e;
+  border-color: white;
+  transform: scale(1.05);
+}
+
+/* Ambient hero glow */
+.hero-glow {
+  position: absolute;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 600px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(139, 92, 255, 0.18) 0%,
+    rgba(59, 129, 255, 0.08) 35%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Animated shimmer on badges */
+@keyframes shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.badge-shimmer {
+  animation: shimmer 2.8s ease-in-out infinite;
+}
+
+/* Fade in on load */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up {
+  animation: fadeUp 0.8s ease-out both;
+}
+
+/* Lightbox */
+.lightbox-backdrop {
+  background: rgba(7, 7, 14, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Hide scrollbar for carousel */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Logo bar hover */
+.logo-item {
+  opacity: 0.55;
+  filter: grayscale(0.4);
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+.logo-item:hover {
+  opacity: 1;
+  filter: grayscale(0);
+}
+
+/* Marquee keyframe — shared by portfolio cards and logo bar */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Silver gradient frame — metallic shine effect */
+.silver-frame {
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #c8c8d0 18%,
+    #8a8a94 35%,
+    #f0f0f4 50%,
+    #9a9aa4 65%,
+    #d8d8dc 82%,
+    #ffffff 100%
+  );
+  background-size: 200% 200%;
+  animation: silverShine 8s ease-in-out infinite;
+}
+
+@keyframes silverShine {
+  0%, 100% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+}
+
+/* Shared fade-edges mask for marquee sections */
+.marquee-wrapper {
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 6%,
+    black 94%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 6%,
+    black 94%,
+    transparent 100%
+  );
+}
+
+/* Pause on hover for any marquee */
+.marquee-wrapper:hover > div {
+  animation-play-state: paused;
+}
+
+/* Selection color */
+::selection {
+  background: rgba(139, 92, 255, 0.4);
+  color: white;
+}
