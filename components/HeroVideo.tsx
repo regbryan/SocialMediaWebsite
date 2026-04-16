@@ -11,153 +11,69 @@ export default function HeroVideo() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        perspective: "1200px",
       }}
     >
-      {/* Glow behind phone */}
+      {/* Glow behind video */}
       <div
         style={{
           position: "absolute",
-          width: "420px",
+          width: "520px",
           height: "420px",
           borderRadius: "50%",
           background:
             "radial-gradient(circle, rgba(139,92,255,0.35) 0%, rgba(59,129,255,0.18) 40%, transparent 70%)",
-          filter: "blur(50px)",
+          filter: "blur(60px)",
           pointerEvents: "none",
           animation: "pulseGlow 4s ease-in-out infinite",
           zIndex: 1,
         }}
       />
 
-      {/* Phone mockup */}
+      {/* Video — no phone frame */}
       <div
         style={{
           position: "relative",
-          width: "280px",
-          height: "560px",
-          borderRadius: "48px",
-          background: "linear-gradient(145deg, #1a1a2e 0%, #0a0a14 100%)",
-          padding: "10px",
+          width: "100%",
+          maxWidth: "520px",
+          borderRadius: "20px",
+          overflow: "hidden",
           boxShadow:
-            "0 40px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(139,92,255,0.2), inset 0 0 0 2px rgba(255,255,255,0.05)",
-          transform: "rotate(-4deg) rotateY(6deg)",
+            "0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,92,255,0.15)",
+          animation: "videoFloat 6s ease-in-out infinite",
           zIndex: 3,
-          animation: "phoneFloat 6s ease-in-out infinite",
         }}
       >
-        {/* Side buttons */}
-        <div
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
           style={{
-            position: "absolute",
-            left: "-2px",
-            top: "120px",
-            width: "2px",
-            height: "60px",
-            background: "#1a1a2e",
-            borderRadius: "2px",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: "-2px",
-            top: "200px",
-            width: "2px",
-            height: "40px",
-            background: "#1a1a2e",
-            borderRadius: "2px",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            right: "-2px",
-            top: "150px",
-            width: "2px",
-            height: "80px",
-            background: "#1a1a2e",
-            borderRadius: "2px",
-          }}
-        />
-
-        {/* Screen */}
-        <div
-          style={{
-            position: "relative",
+            display: "block",
             width: "100%",
-            height: "100%",
-            borderRadius: "38px",
-            overflow: "hidden",
-            background: "#000",
+            height: "auto",
           }}
         >
-          {/* Video */}
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-            }}
-          >
-            <source src="/hero-video.mp4" type="video/mp4" />
-          </video>
+          <source src="/hero-video.mp4" type="video/mp4" />
+        </video>
 
-          {/* Dynamic Island */}
-          <div
-            style={{
-              position: "absolute",
-              top: "12px",
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: "88px",
-              height: "26px",
-              borderRadius: "999px",
-              background: "#000",
-              zIndex: 5,
-            }}
-          />
-
-          {/* Gradient overlays */}
-          <div
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: "100px",
-              background:
-                "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.6) 100%)",
-              zIndex: 3,
-              pointerEvents: "none",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: "80px",
-              background:
-                "linear-gradient(180deg, rgba(0,0,0,0.4) 0%, transparent 100%)",
-              zIndex: 3,
-              pointerEvents: "none",
-            }}
-          />
-        </div>
+        {/* Subtle edge vignette */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            borderRadius: "20px",
+            boxShadow: "inset 0 0 40px rgba(0,0,0,0.3)",
+            pointerEvents: "none",
+            zIndex: 2,
+          }}
+        />
       </div>
 
       <style>{`
-        @keyframes phoneFloat {
-          0%, 100% { transform: rotate(-4deg) rotateY(6deg) translateY(0); }
-          50% { transform: rotate(-4deg) rotateY(6deg) translateY(-12px); }
+        @keyframes videoFloat {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
         }
         @keyframes pulseGlow {
           0%, 100% { opacity: 0.6; transform: scale(1); }
