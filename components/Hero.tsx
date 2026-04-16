@@ -15,7 +15,7 @@ export default function Hero() {
         backgroundColor: "#07070e",
         position: "relative",
         minHeight: "100vh",
-        padding: "60px clamp(24px, 6vw, 120px) 80px",
+        padding: "100px clamp(24px, 6vw, 120px) 80px",
         overflow: "hidden",
       }}
     >

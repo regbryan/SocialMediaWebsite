@@ -6,10 +6,8 @@ export default function HeroVideo() {
       style={{
         position: "relative",
         width: "100%",
-        height: "100%",
-        minHeight: "600px",
         display: "flex",
-        alignItems: "center",
+        alignItems: "flex-start",
         justifyContent: "center",
       }}
     >

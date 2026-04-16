@@ -59,17 +59,6 @@ export default function Footer() {
             >
               SocialPulse
             </span>
-            <p
-              style={{
-                fontSize: "14px",
-                lineHeight: 1.6,
-                color: "#9999a6",
-                maxWidth: "240px",
-                margin: 0,
-              }}
-            >
-              AI-powered social media management that grows your brand.
-            </p>
           </div>
 
           {/* Link columns */}
