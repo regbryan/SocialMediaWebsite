@@ -1,4 +1,4 @@
-import HeroGraphic from "./HeroGraphic";
+import HeroVideo from "./HeroVideo";
 
 const stats = [
   { value: "500+", label: "Posts Created" },
@@ -15,7 +15,7 @@ export default function Hero() {
         backgroundColor: "#07070e",
         position: "relative",
         minHeight: "100vh",
-        padding: "80px clamp(24px, 6vw, 120px) 80px",
+        padding: "60px clamp(24px, 6vw, 120px) 80px",
         overflow: "hidden",
       }}
     >
@@ -38,7 +38,7 @@ export default function Hero() {
             display: "grid",
             gridTemplateColumns: "1fr",
             gap: "48px",
-            alignItems: "center",
+            alignItems: "start",
           }}
         >
           {/* Left column — content */}
@@ -46,25 +46,6 @@ export default function Hero() {
             className="flex flex-col hero-content-col"
             style={{ gap: "28px" }}
           >
-            {/* Badge */}
-            <div
-              className="inline-flex items-center self-center lg:self-start"
-              style={{
-                backgroundColor: "#0f0f1a",
-                border: "1px solid #1a1a2e",
-                color: "#b18bff",
-                padding: "8px 16px",
-                borderRadius: "999px",
-                fontSize: "13px",
-                fontWeight: 500,
-                gap: "8px",
-                width: "fit-content",
-              }}
-            >
-              <span>✦</span>
-              <span>AI-Powered Social Media Management</span>
-            </div>
-
             {/* Headline */}
             <h1
               className="text-center lg:text-left"
@@ -194,8 +175,7 @@ export default function Hero() {
             display: flex !important;
             align-items: flex-start;
             justify-content: center;
-            min-height: 520px;
-            padding-top: 16px;
+            align-self: start;
           }
         }
       `}</style>
