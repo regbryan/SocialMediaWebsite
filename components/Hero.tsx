@@ -1,4 +1,4 @@
-import HeroVideo from "./HeroVideo";
+import HeroGraphic from "./HeroGraphic";
 
 const stats = [
   { value: "500+", label: "Posts Created" },
@@ -15,7 +15,7 @@ export default function Hero() {
         backgroundColor: "#07070e",
         position: "relative",
         minHeight: "100vh",
-        padding: "140px clamp(24px, 6vw, 120px) 80px",
+        padding: "80px clamp(24px, 6vw, 120px) 80px",
         overflow: "hidden",
       }}
     >
