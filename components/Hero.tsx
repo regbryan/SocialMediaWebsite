@@ -192,9 +192,10 @@ export default function Hero() {
           }
           .hero-graphic-col {
             display: flex !important;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             min-height: 520px;
+            padding-top: 16px;
           }
         }
       `}</style>
