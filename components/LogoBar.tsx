@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { useEffect, useRef } from "react";
 
 const logos = [
   { src: "/logos/blitz.png", alt: "Blitz Organization" },
@@ -9,10 +12,25 @@ const logos = [
   { src: "/logos/csc.png", alt: "Cyber Safety Cop" },
 ];
 
-// Duplicate for seamless infinite loop
-const loopedLogos = [...logos, ...logos];
+// Triple so there's plenty of content across the full scroll range
+const loopedLogos = [...logos, ...logos, ...logos];
 
 export default function LogoBar() {
+  const stripRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!stripRef.current) return;
+      // 0.4px of strip travel per 1px of page scroll
+      const offset = window.scrollY * 0.4;
+      stripRef.current.style.transform = `translateX(-${offset}px)`;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // set initial position
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <section
       style={{
@@ -42,37 +60,42 @@ export default function LogoBar() {
         </span>
       </div>
 
-      {/* Marquee — full bleed so edges fade */}
+      {/* Scroll-driven strip — full bleed */}
       <div
-        className="marquee-wrapper logos-marquee"
         style={{
           position: "relative",
           overflow: "hidden",
           marginTop: "36px",
         }}
       >
+        {/* Fade edges */}
         <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(to right, #07070e 0%, transparent 12%, transparent 88%, #07070e 100%)",
+            zIndex: 2,
+            pointerEvents: "none",
+          }}
+        />
+
+        <div
+          ref={stripRef}
           style={{
             display: "flex",
             gap: "80px",
             width: "max-content",
-            animation: `marquee ${logos.length * 5}s linear infinite`,
             alignItems: "center",
+            willChange: "transform",
           }}
         >
           {loopedLogos.map((logo, i) => (
             <div
               key={`${logo.alt}-${i}`}
-              className="logo-item flex items-center justify-center"
               style={{ height: "60px", flexShrink: 0 }}
             >
-              <div
-                style={{
-                  position: "relative",
-                  width: "160px",
-                  height: "60px",
-                }}
-              >
+              <div style={{ position: "relative", width: "160px", height: "60px" }}>
                 <Image
                   src={logo.src}
                   alt={logo.alt}
