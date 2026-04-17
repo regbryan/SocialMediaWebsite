@@ -17,7 +17,7 @@ export default function HeroVideo() {
         compositionWidth={520}
         compositionHeight={620}
         fps={30}
-        style={{ width: "100%", maxWidth: "520px", background: "transparent" }}
+        style={{ width: "100%", maxWidth: "520px", background: "#07070e" }}
         autoPlay
         loop
         controls={false}
