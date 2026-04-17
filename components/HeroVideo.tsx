@@ -46,6 +46,7 @@ export default function HeroVideo() {
           position: "relative",
           width: "100%",
           maxWidth: "520px",
+          background: "#07070e",
           animation: "videoFloat 6s ease-in-out infinite",
           zIndex: 3,
         }}
@@ -56,7 +57,7 @@ export default function HeroVideo() {
           muted
           loop
           playsInline
-          style={{ display: "block", width: "100%", height: "auto" }}
+          style={{ display: "block", width: "100%", height: "auto", background: "#07070e" }}
         >
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
