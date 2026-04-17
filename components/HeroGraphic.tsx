@@ -81,7 +81,6 @@ export default function HeroGraphic() {
         style={{
           position: "absolute",
           inset: 0,
-          overflow: "hidden",
           pointerEvents: "none",
           zIndex: 2,
         }}

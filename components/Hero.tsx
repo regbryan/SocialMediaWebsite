@@ -1,4 +1,4 @@
-import HeroVideo from "./HeroVideo";
+import HeroGraphic from "./HeroGraphic";
 
 const stats = [
   { value: "500+", label: "Posts Created" },
@@ -159,7 +159,7 @@ export default function Hero() {
 
           {/* Right column — hero video (desktop only) */}
           <div className="hero-graphic-col hidden lg:flex">
-            <HeroVideo />
+            <HeroGraphic />
           </div>
         </div>
       </div>
