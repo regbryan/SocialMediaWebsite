@@ -1,8 +1,19 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+
 const BG = "#07070e";
 
 export default function HeroVideo() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = true;
+    v.play().catch(() => {});
+  }, []);
+
   return (
     <div
       style={{
@@ -29,20 +40,18 @@ export default function HeroVideo() {
         }}
       />
 
-      {/* Video */}
+      {/* Video — no box, no border, no clip */}
       <div
         style={{
           position: "relative",
           width: "100%",
           maxWidth: "520px",
-          borderRadius: "20px",
-          overflow: "hidden",
-          boxShadow: "0 30px 80px rgba(0,0,0,0.6)",
           animation: "videoFloat 6s ease-in-out infinite",
           zIndex: 3,
         }}
       >
         <video
+          ref={videoRef}
           autoPlay
           muted
           loop
@@ -51,18 +60,21 @@ export default function HeroVideo() {
         >
           <source src="/hero-video.mp4" type="video/mp4" />
         </video>
+      </div>
 
-        {/* Edge fades — match hero bg color */}
-        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 2 }}>
-          {/* top */}
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "25%", background: `linear-gradient(to bottom, ${BG}, transparent)` }} />
-          {/* bottom */}
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30%", background: `linear-gradient(to top, ${BG}, transparent)` }} />
-          {/* left */}
-          <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: "20%", background: `linear-gradient(to right, ${BG}, transparent)` }} />
-          {/* right */}
-          <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "20%", background: `linear-gradient(to left, ${BG}, transparent)` }} />
-        </div>
+      {/* Edge fades sit OUTSIDE the video div so overflow:hidden can't trap them */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          zIndex: 4,
+        }}
+      >
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "28%", background: `linear-gradient(to bottom, ${BG}, transparent)` }} />
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "32%", background: `linear-gradient(to top, ${BG}, transparent)` }} />
+        <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: "22%", background: `linear-gradient(to right, ${BG}, transparent)` }} />
+        <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "22%", background: `linear-gradient(to left, ${BG}, transparent)` }} />
       </div>
 
       <style>{`
