@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const logos = [
   { src: "/logos/blitz.png", alt: "Blitz Organization" },
@@ -12,23 +12,28 @@ const logos = [
   { src: "/logos/csc.png", alt: "Cyber Safety Cop" },
 ];
 
-// Triple so there's plenty of content across the full scroll range
-const loopedLogos = [...logos, ...logos, ...logos];
+// Duplicate once for seamless CSS loop
+const loopedLogos = [...logos, ...logos];
 
 export default function LogoBar() {
-  const stripRef = useRef<HTMLDivElement>(null);
+  // "forward" = scrolling left (default when page scrolls down or idle)
+  // "reverse" = scrolling right (when page scrolls up)
+  const [direction, setDirection] = useState<"forward" | "reverse">("forward");
+  const lastYRef = useRef(0);
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (!stripRef.current) return;
-      // 0.4px of strip travel per 1px of page scroll
-      const offset = window.scrollY * 0.4;
-      stripRef.current.style.transform = `translateX(-${offset}px)`;
+    lastYRef.current = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const delta = y - lastYRef.current;
+      // Ignore tiny deltas so the direction doesn't flap on micro-movements
+      if (Math.abs(delta) > 2) {
+        setDirection(delta > 0 ? "forward" : "reverse");
+      }
+      lastYRef.current = y;
     };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll(); // set initial position
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
@@ -60,7 +65,7 @@ export default function LogoBar() {
         </span>
       </div>
 
-      {/* Scroll-driven strip — full bleed */}
+      {/* Auto-scrolling strip — reverses direction with page scroll direction */}
       <div
         style={{
           position: "relative",
@@ -81,20 +86,19 @@ export default function LogoBar() {
         />
 
         <div
-          ref={stripRef}
+          className="logo-strip"
           style={{
             display: "flex",
             gap: "80px",
             width: "max-content",
             alignItems: "center",
+            animation: "logoMarquee 32s linear infinite",
+            animationDirection: direction === "forward" ? "normal" : "reverse",
             willChange: "transform",
           }}
         >
           {loopedLogos.map((logo, i) => (
-            <div
-              key={`${logo.alt}-${i}`}
-              style={{ height: "60px", flexShrink: 0 }}
-            >
+            <div key={`${logo.alt}-${i}`} style={{ height: "60px", flexShrink: 0 }}>
               <div style={{ position: "relative", width: "160px", height: "60px" }}>
                 <Image
                   src={logo.src}
@@ -108,6 +112,13 @@ export default function LogoBar() {
           ))}
         </div>
       </div>
+
+      <style>{`
+        @keyframes logoMarquee {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-50%); }
+        }
+      `}</style>
     </section>
   );
 }
