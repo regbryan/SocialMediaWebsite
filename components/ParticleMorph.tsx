@@ -35,7 +35,7 @@ export default function ParticleMorph({
   width = 560,
   height = 200,
   particleCount = 1500,
-  holdMs = 2800,
+  holdMs = 3200,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -94,8 +94,9 @@ export default function ParticleMorph({
 
       const data = samplerCtx.getImageData(0, 0, width, height).data;
       const pts: Pt[] = [];
-      for (let y = 0; y < height; y += 3) {
-        for (let x = 0; x < width; x += 3) {
+      // Step 2 gives ~4× denser sampling than step 3 — crisper letter edges
+      for (let y = 0; y < height; y += 2) {
+        for (let x = 0; x < width; x += 2) {
           if (data[(y * width + x) * 4 + 3] > 128) pts.push({ x, y });
         }
       }
@@ -174,15 +175,16 @@ export default function ParticleMorph({
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
 
-        // Spring toward target with friction (antigravity float)
-        const ax = (p.tx - p.x) * 0.018;
-        const ay = (p.ty - p.y) * 0.018;
-        p.vx = (p.vx + ax) * 0.92;
-        p.vy = (p.vy + ay) * 0.92;
+        // Spring toward target with friction. Higher spring + less friction
+        // so particles settle into the word within ~0.6s (was 2s+).
+        const ax = (p.tx - p.x) * 0.055;
+        const ay = (p.ty - p.y) * 0.055;
+        p.vx = (p.vx + ax) * 0.86;
+        p.vy = (p.vy + ay) * 0.86;
 
-        // Jitter noise — vibrating in place
-        p.vx += Math.sin(t * 0.9 + p.noisePhase) * p.noiseAmp * 0.022;
-        p.vy += Math.cos(t * 1.1 + p.noisePhase * 1.3) * p.noiseAmp * 0.022;
+        // Jitter noise — small, so it vibrates at rest without blurring letters
+        p.vx += Math.sin(t * 0.9 + p.noisePhase) * p.noiseAmp * 0.012;
+        p.vy += Math.cos(t * 1.1 + p.noisePhase * 1.3) * p.noiseAmp * 0.012;
 
         p.x += p.vx;
         p.y += p.vy;
