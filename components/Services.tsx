@@ -392,7 +392,7 @@ export default function Services() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            gap: "2px",
+            gap: 0,
             transformStyle: "preserve-3d",
             minHeight: "460px",
           }}
