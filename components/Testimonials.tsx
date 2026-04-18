@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import GlowingEdgeCard from "./GlowingEdgeCard";
 
 const testimonials = [
   {
@@ -214,25 +215,19 @@ export default function Testimonials() {
               }}
             />
 
-            <div
-              key={idx}
-              className="testi-card"
-              style={{
-                position: "relative",
-                zIndex: 1,
-                backgroundColor: "#0f0f1a",
-                border: "1px solid #1a1a2e",
-                borderRadius: "22px",
-                padding: "clamp(28px, 4vw, 44px)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                textAlign: "center",
-                gap: "22px",
-                overflow: "hidden",
-                animation: `testiIn${direction > 0 ? "R" : "L"} 0.55s cubic-bezier(0.22, 1, 0.36, 1) both`,
-              }}
-            >
+            <GlowingEdgeCard key={idx} style={{ borderRadius: "22px", position: "relative", zIndex: 1 }}>
+              <div
+                className="testi-card"
+                style={{
+                  padding: "clamp(28px, 4vw, 44px)",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  textAlign: "center",
+                  gap: "22px",
+                  animation: `testiIn${direction > 0 ? "R" : "L"} 0.55s cubic-bezier(0.22, 1, 0.36, 1) both`,
+                }}
+              >
               {/* Corner accent */}
               <div
                 style={{
@@ -295,6 +290,7 @@ export default function Testimonials() {
                 </div>
               </div>
             </div>
+            </GlowingEdgeCard>
           </div>
 
           <div className="hidden md:block">
