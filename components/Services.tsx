@@ -257,18 +257,27 @@ const services: Service[] = [
   },
 ];
 
-// Fixed-arc tunnel: all cards visible in a row, each rotated toward the center
-// so the whole row reads as the inside of a curved wall facing the viewer.
-// Delta is the signed distance from the middle of the array.
-function arcRotation(delta: number, hoveredIdx: number | null, myIdx: number): string {
-  // Base tilt per step. 9 cards → extremes sit at ±4 * 14 = 56deg
-  const step = 14;
-  const base = -delta * step;
-  // If user hovers a card, flatten it and gently unroll the rest
+// Flared tunnel: center cards are SMALL and RECESSED, edges are LARGE and FORWARD.
+// This creates the wide-angle fisheye look where the center draws back and the
+// sides bulge out toward the viewer, matching the reference image.
+function arcRotation(delta: number, maxDelta: number, hoveredIdx: number | null, myIdx: number): string {
   if (hoveredIdx === myIdx) {
-    return "rotateY(0deg) translateZ(60px) scale(1.05)";
+    return "rotateY(0deg) translateZ(220px) scale(1.25)";
   }
-  return `rotateY(${base}deg)`;
+  const absD = Math.abs(delta);
+  const progress = maxDelta > 0 ? absD / maxDelta : 0; // 0 = center, 1 = edge
+
+  // Rotation still tilts each card inward
+  const step = 16;
+  const rotY = -delta * step;
+
+  // Scale: center shrinks, edges grow
+  const scale = 0.62 + progress * 0.55; // 0.62 → 1.17
+
+  // Z translation: center pushed back, edges pulled forward
+  const z = -140 + progress * 200; // -140 → +60
+
+  return `translateZ(${z}px) rotateY(${rotY}deg) scale(${scale})`;
 }
 
 function NavButton({ dir, onClick }: { dir: "left" | "right"; onClick: () => void }) {
@@ -383,14 +392,14 @@ export default function Services() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            gap: "4px",
+            gap: "2px",
             transformStyle: "preserve-3d",
             minHeight: "460px",
           }}
         >
           {services.map((s, i) => {
             const delta = i - center;
-            const transform = arcRotation(delta, hoveredIdx, i);
+            const transform = arcRotation(delta, center, hoveredIdx, i);
             return (
               <article
                 key={s.title}
