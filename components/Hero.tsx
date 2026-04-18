@@ -22,6 +22,11 @@ export default function Hero() {
       {/* Ambient glow */}
       <div className="hero-glow" />
 
+      {/* Full-width motion graphic background */}
+      <div style={{ position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none" }}>
+        <HeroVideo />
+      </div>
+
       <div
         className="mx-auto grid items-center"
         style={{
@@ -157,28 +162,9 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Right column — hero video (desktop only) */}
-          <div className="hero-graphic-col hidden lg:flex">
-            <HeroVideo />
-          </div>
         </div>
       </div>
 
-      {/* Responsive grid via CSS */}
-      <style>{`
-        @media (min-width: 1024px) {
-          .hero-grid {
-            grid-template-columns: 1.1fr 1fr !important;
-            gap: 56px !important;
-          }
-          .hero-graphic-col {
-            display: flex !important;
-            align-items: flex-start;
-            justify-content: center;
-            align-self: start;
-          }
-        }
-      `}</style>
     </section>
   );
 }
