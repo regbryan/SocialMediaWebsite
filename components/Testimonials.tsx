@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
 const testimonials = [
   {
     quote:
@@ -28,17 +32,13 @@ const testimonials = [
   },
 ];
 
-function StarRow() {
+const AUTO_ADVANCE_MS = 6500;
+
+function Stars() {
   return (
-    <div className="flex" style={{ gap: "2px" }}>
+    <div className="flex" style={{ gap: "3px" }}>
       {[...Array(5)].map((_, i) => (
-        <svg
-          key={i}
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="#ffc857"
-        >
+        <svg key={i} width="16" height="16" viewBox="0 0 24 24" fill="#ffc857">
           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
         </svg>
       ))}
@@ -46,7 +46,79 @@ function StarRow() {
   );
 }
 
+function Arrow({ dir, onClick, label }: { dir: "left" | "right"; onClick: () => void; label: string }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={label}
+      style={{
+        width: "44px",
+        height: "44px",
+        borderRadius: "999px",
+        background: "rgba(255,255,255,0.03)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        color: "rgba(255,255,255,0.8)",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transition: "background 0.2s, border-color 0.2s, transform 0.2s",
+        flexShrink: 0,
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = "rgba(139,92,255,0.15)";
+        e.currentTarget.style.borderColor = "rgba(139,92,255,0.4)";
+        e.currentTarget.style.transform = "scale(1.06)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+        e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+        e.currentTarget.style.transform = "scale(1)";
+      }}
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        {dir === "left" ? <polyline points="15 18 9 12 15 6" /> : <polyline points="9 18 15 12 9 6" />}
+      </svg>
+    </button>
+  );
+}
+
 export default function Testimonials() {
+  const [idx, setIdx] = useState(0);
+  const [direction, setDirection] = useState<1 | -1>(1);
+  const [paused, setPaused] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+
+  const go = (next: number) => {
+    const len = testimonials.length;
+    const normalized = ((next % len) + len) % len;
+    setDirection(normalized > idx || (idx === len - 1 && normalized === 0) ? 1 : -1);
+    setIdx(normalized);
+  };
+  const next = () => go(idx + 1);
+  const prev = () => go(idx - 1);
+
+  useEffect(() => {
+    if (paused) return;
+    const id = setInterval(() => {
+      setDirection(1);
+      setIdx((i) => (i + 1) % testimonials.length);
+    }, AUTO_ADVANCE_MS);
+    return () => clearInterval(id);
+  }, [paused]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") prev();
+      if (e.key === "ArrowRight") next();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idx]);
+
+  const t = testimonials[idx];
+
   return (
     <section
       style={{
@@ -56,13 +128,10 @@ export default function Testimonials() {
     >
       <div
         className="mx-auto flex flex-col"
-        style={{ maxWidth: "1280px", gap: "56px" }}
+        style={{ maxWidth: "1280px", gap: "48px" }}
       >
         {/* Header */}
-        <div
-          className="flex flex-col items-center text-center"
-          style={{ gap: "14px" }}
-        >
+        <div className="flex flex-col items-center text-center" style={{ gap: "14px" }}>
           <span
             style={{
               color: "#8b5cff",
@@ -99,33 +168,79 @@ export default function Testimonials() {
           </p>
         </div>
 
-        {/* Grid */}
+        {/* Carousel */}
         <div
-          className="grid grid-cols-1 md:grid-cols-3"
-          style={{ gap: "24px" }}
+          className="flex items-center"
+          style={{ gap: "20px", justifyContent: "center" }}
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          onTouchStart={(e) => (touchStartX.current = e.touches[0].clientX)}
+          onTouchEnd={(e) => {
+            if (touchStartX.current == null) return;
+            const dx = e.changedTouches[0].clientX - touchStartX.current;
+            if (Math.abs(dx) > 40) (dx < 0 ? next : prev)();
+            touchStartX.current = null;
+          }}
         >
-          {testimonials.map((t) => (
+          <div className="hidden md:block">
+            <Arrow dir="left" onClick={prev} label="Previous testimonial" />
+          </div>
+
+          {/* Card viewport */}
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "720px",
+              position: "relative",
+              overflow: "hidden",
+              borderRadius: "22px",
+            }}
+          >
+            {/* Ambient accent behind card */}
             <div
-              key={t.name}
-              className="card-hover flex flex-col"
               style={{
+                position: "absolute",
+                top: "-80px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: "320px",
+                height: "320px",
+                borderRadius: "50%",
+                background: `radial-gradient(circle, ${t.accent}30 0%, transparent 70%)`,
+                filter: "blur(20px)",
+                pointerEvents: "none",
+                transition: "background 0.6s ease",
+                zIndex: 0,
+              }}
+            />
+
+            <div
+              key={idx}
+              className="testi-card"
+              style={{
+                position: "relative",
+                zIndex: 1,
                 backgroundColor: "#0f0f1a",
                 border: "1px solid #1a1a2e",
-                borderRadius: "20px",
-                padding: "32px",
-                gap: "20px",
-                position: "relative",
+                borderRadius: "22px",
+                padding: "clamp(28px, 4vw, 44px)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
+                gap: "22px",
                 overflow: "hidden",
+                animation: `testiIn${direction > 0 ? "R" : "L"} 0.55s cubic-bezier(0.22, 1, 0.36, 1) both`,
               }}
             >
-              {/* Subtle accent */}
+              {/* Corner accent */}
               <div
                 style={{
                   position: "absolute",
-                  top: "-60px",
-                  right: "-60px",
-                  width: "200px",
-                  height: "200px",
+                  top: "-80px",
+                  right: "-80px",
+                  width: "260px",
+                  height: "260px",
                   borderRadius: "50%",
                   background: `radial-gradient(circle, ${t.accent}22 0%, transparent 70%)`,
                   pointerEvents: "none",
@@ -133,54 +248,38 @@ export default function Testimonials() {
               />
 
               {/* Quote mark */}
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill={t.accent}
-                style={{ opacity: 0.4 }}
-              >
+              <svg width="38" height="38" viewBox="0 0 24 24" fill={t.accent} style={{ opacity: 0.45 }}>
                 <path d="M7.17 17q-1.32 0-2.24-.92T4 13.84q0-1.1.55-2.43t1.88-3.04Q7.76 6.68 10 5l.66.86q-1.6 1.14-2.72 2.44t-1.62 2.63q.2-.06.42-.1t.43-.04q1.23 0 2.08.89t.85 2.07q0 1.32-.86 2.28T7.17 17zm9 0q-1.32 0-2.24-.92T13 13.84q0-1.1.55-2.43t1.88-3.04q1.34-1.69 3.57-3.37l.66.86q-1.6 1.14-2.72 2.44t-1.62 2.63q.2-.06.42-.1t.43-.04q1.23 0 2.08.89t.85 2.07q0 1.32-.86 2.28t-2.07.97z" />
               </svg>
 
-              {/* Stars */}
-              <StarRow />
+              <Stars />
 
-              {/* Quote */}
               <p
                 style={{
-                  color: "#bfbfcc",
-                  fontSize: "15px",
-                  lineHeight: 1.65,
+                  color: "#d4d4de",
+                  fontSize: "clamp(16px, 1.6vw, 20px)",
+                  lineHeight: 1.6,
                   margin: 0,
-                  flexGrow: 1,
                   position: "relative",
                   zIndex: 1,
+                  fontWeight: 400,
                 }}
               >
                 &ldquo;{t.quote}&rdquo;
               </p>
 
-              {/* Divider */}
-              <div
-                style={{
-                  height: "1px",
-                  background: "#1a1a2e",
-                  margin: "0 -32px",
-                }}
-              />
+              <div style={{ height: "1px", background: "#1a1a2e", margin: "4px 0", width: "80px", alignSelf: "center" }} />
 
-              {/* Attribution */}
-              <div className="flex items-center" style={{ gap: "14px" }}>
+              <div className="flex items-center" style={{ gap: "14px", justifyContent: "center" }}>
                 <div
                   className="flex items-center justify-center"
                   style={{
-                    width: "44px",
-                    height: "44px",
+                    width: "48px",
+                    height: "48px",
                     borderRadius: "999px",
                     background: `linear-gradient(135deg, ${t.accent}, ${t.accent}88)`,
                     color: "white",
-                    fontSize: "14px",
+                    fontSize: "15px",
                     fontWeight: 700,
                     letterSpacing: "-0.01em",
                     flexShrink: 0,
@@ -189,24 +288,65 @@ export default function Testimonials() {
                   {t.initials}
                 </div>
                 <div className="flex flex-col" style={{ gap: "2px", minWidth: 0 }}>
-                  <span
-                    style={{
-                      color: "white",
-                      fontSize: "14px",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {t.name}
-                  </span>
+                  <span style={{ color: "white", fontSize: "15px", fontWeight: 600 }}>{t.name}</span>
                   <span style={{ color: "#9999a6", fontSize: "13px" }}>
                     {t.title} · {t.company}
                   </span>
                 </div>
               </div>
             </div>
-          ))}
+          </div>
+
+          <div className="hidden md:block">
+            <Arrow dir="right" onClick={next} label="Next testimonial" />
+          </div>
+        </div>
+
+        {/* Dots + mobile arrows */}
+        <div className="flex items-center justify-center" style={{ gap: "16px" }}>
+          <div className="md:hidden">
+            <Arrow dir="left" onClick={prev} label="Previous" />
+          </div>
+
+          <div className="flex items-center" style={{ gap: "10px" }}>
+            {testimonials.map((_, i) => {
+              const active = i === idx;
+              return (
+                <button
+                  key={i}
+                  onClick={() => go(i)}
+                  aria-label={`Go to testimonial ${i + 1}`}
+                  style={{
+                    width: active ? "28px" : "8px",
+                    height: "8px",
+                    borderRadius: "999px",
+                    border: "none",
+                    background: active ? "linear-gradient(90deg, #8b5cff, #3b81ff)" : "rgba(255,255,255,0.15)",
+                    cursor: "pointer",
+                    transition: "width 0.35s cubic-bezier(0.22, 1, 0.36, 1), background 0.35s",
+                    padding: 0,
+                  }}
+                />
+              );
+            })}
+          </div>
+
+          <div className="md:hidden">
+            <Arrow dir="right" onClick={next} label="Next" />
+          </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes testiInR {
+          from { opacity: 0; transform: translateX(40px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes testiInL {
+          from { opacity: 0; transform: translateX(-40px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+      `}</style>
     </section>
   );
 }
