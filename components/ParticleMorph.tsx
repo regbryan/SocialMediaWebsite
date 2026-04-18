@@ -48,14 +48,26 @@ function samplePointsFromDraw(
 
 function heartPoints(w: number, h: number): Pt[] {
   return samplePointsFromDraw(w, h, 3, (c) => {
+    // Parametric heart: x = 16 sin³(t), y = -(13 cos t - 5 cos 2t - 2 cos 3t - cos 4t)
     const cx = w / 2;
-    const cy = h / 2 + 10;
-    const s = Math.min(w, h) * 0.4;
+    const cy = h / 2;
+    const scale = Math.min(w * 0.42, h * 0.52) / 17;
     c.fillStyle = "white";
     c.beginPath();
-    c.moveTo(cx, cy + s * 0.35);
-    c.bezierCurveTo(cx - s * 1.35, cy - s * 0.45, cx - s * 0.55, cy - s * 1.25, cx, cy - s * 0.3);
-    c.bezierCurveTo(cx + s * 0.55, cy - s * 1.25, cx + s * 1.35, cy - s * 0.45, cx, cy + s * 0.35);
+    const steps = 256;
+    for (let i = 0; i <= steps; i++) {
+      const t = (i / steps) * Math.PI * 2;
+      const x = cx + 16 * Math.pow(Math.sin(t), 3) * scale;
+      const y =
+        cy -
+        (13 * Math.cos(t) -
+          5 * Math.cos(2 * t) -
+          2 * Math.cos(3 * t) -
+          Math.cos(4 * t)) *
+          scale;
+      if (i === 0) c.moveTo(x, y);
+      else c.lineTo(x, y);
+    }
     c.closePath();
     c.fill();
   });
@@ -174,14 +186,15 @@ const vertexShader = /* glsl */ `
     );
     pos += noise * mid * 40.0;
 
-    // Horizontal streak bias — every particle picks a slight direction from aRandom2
-    pos.x += (aRandom2 - 0.5) * 140.0 * mid;
+    // Tiny horizontal jitter so streaks overlap rather than perfectly stack
+    pos.x += (aRandom2 - 0.5) * 40.0 * mid;
 
     vMid = mid;
 
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
     gl_Position = projectionMatrix * mvPosition;
-    gl_PointSize = uSize * uPixelRatio * (1.0 + mid * 1.2);
+    // Inflate point size during transition — this becomes the streak length
+    gl_PointSize = uSize * uPixelRatio * (1.0 + mid * 8.0);
   }
 `;
 
@@ -189,17 +202,32 @@ const fragmentShader = /* glsl */ `
   varying float vMid;
 
   void main() {
-    // Soft round point
+    // uv is 0..1 in point sprite; center on zero
     vec2 uv = gl_PointCoord - 0.5;
-    float dist = length(uv);
-    float alpha = smoothstep(0.5, 0.05, dist);
+
+    // --- Round dot at rest ---
+    float distR = length(uv);
+    float dot = smoothstep(0.5, 0.05, distR);
+
+    // --- Horizontal streak during transition ---
+    // Thin vertical band (stays centered vertically)
+    float vertThick = 0.09;
+    float streakVert = smoothstep(vertThick, vertThick * 0.2, abs(uv.y));
+    // Soft falloff at left/right tips so streak fades out, not hard-edges
+    float streakHoriz = smoothstep(0.5, 0.32, abs(uv.x));
+    // Extra brightness in the center of the streak (like a highlight along the stroke)
+    float core = smoothstep(0.04, 0.0, abs(uv.y)) * 0.4;
+    float streak = streakVert * streakHoriz + core * streakHoriz;
+
+    // Blend between dot and streak based on motion
+    float alpha = mix(dot, streak, smoothstep(0.1, 0.55, vMid));
 
     // Pink → hot magenta, brightens during motion
-    vec3 cBase = vec3(1.0, 0.18, 0.46);   // #ff2e75
-    vec3 cFast = vec3(1.0, 0.55, 0.85);   // pink highlight
+    vec3 cBase = vec3(1.0, 0.18, 0.46);
+    vec3 cFast = vec3(1.0, 0.55, 0.82);
     vec3 color = mix(cBase, cFast, vMid);
 
-    gl_FragColor = vec4(color, alpha * (0.82 + vMid * 0.18));
+    gl_FragColor = vec4(color, alpha * (0.85 + vMid * 0.15));
   }
 `;
 
