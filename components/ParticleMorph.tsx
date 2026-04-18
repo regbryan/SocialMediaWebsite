@@ -3,73 +3,94 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Particle morph canvas — samples pixel positions from shapes (heart, text),
- * then animates particles between them with motion trails.
+ * DOM-based particle morph using CSS transforms.
  *
- * Loop: heart → word[0] → heart → word[1] → heart → word[2] → ...
+ * Full sequence per cycle:
+ *   1. HEART holds (stable shape)
+ *   2. WIND STREAK — particles kick horizontally, heavy motion blur
+ *   3. TEXT — decelerate + spring into letter positions
+ *   4. TEXT holds
+ *   5. BALL SWEEP — compact cluster sweeps left→right, "eating" the text
+ *   6. BALL reforms into HEART (loop)
  */
 
 type Props = {
   words: string[];
   width?: number;
   height?: number;
-  holdMs?: number;
-  morphMs?: number;
-  particleSize?: number;
-  /** Target number of particles — actual count may vary slightly */
   particleCount?: number;
 };
 
+type Pt = { x: number; y: number };
 type Particle = {
+  el: HTMLDivElement;
   x: number;
   y: number;
-  tx: number;
-  ty: number;
   vx: number;
   vy: number;
+  tx: number;
+  ty: number;
+  captured: boolean; // true when the sweep ball has eaten this particle
   phase: number;
-  amp: number;
-  /** Hue 0-360 for gradient color */
-  hue: number;
 };
 
-function hashPick<T>(arr: T[], seed: number): T {
-  // Deterministic pick by index (so particles keep personality across remaps)
-  return arr[seed % arr.length];
-}
-
-/** Sample opaque pixel positions from a rasterized shape. */
-function samplePoints(
-  width: number,
-  height: number,
-  draw: (ctx: CanvasRenderingContext2D) => void,
-  step: number
-): { x: number; y: number }[] {
+function samplePointsFromDraw(
+  w: number,
+  h: number,
+  step: number,
+  draw: (ctx: CanvasRenderingContext2D) => void
+): Pt[] {
   const c = document.createElement("canvas");
-  c.width = width;
-  c.height = height;
+  c.width = w;
+  c.height = h;
   const ctx = c.getContext("2d");
   if (!ctx) return [];
   draw(ctx);
-  const data = ctx.getImageData(0, 0, width, height).data;
-  const pts: { x: number; y: number }[] = [];
-  for (let y = 0; y < height; y += step) {
-    for (let x = 0; x < width; x += step) {
-      if (data[(y * width + x) * 4 + 3] > 128) pts.push({ x, y });
+  const data = ctx.getImageData(0, 0, w, h).data;
+  const pts: Pt[] = [];
+  for (let y = 0; y < h; y += step) {
+    for (let x = 0; x < w; x += step) {
+      if (data[(y * w + x) * 4 + 3] > 128) pts.push({ x, y });
     }
   }
   return pts;
 }
 
-/** Resample an array of points to a target count (uniform sample/duplicate). */
-function normalizeToCount(pts: { x: number; y: number }[], n: number) {
+function heartPoints(w: number, h: number): Pt[] {
+  return samplePointsFromDraw(w, h, 4, (c) => {
+    const cx = w / 2;
+    const cy = h / 2 + 10;
+    const s = Math.min(w, h) * 0.38;
+    c.fillStyle = "white";
+    c.beginPath();
+    c.moveTo(cx, cy + s * 0.35);
+    c.bezierCurveTo(cx - s * 1.35, cy - s * 0.45, cx - s * 0.55, cy - s * 1.25, cx, cy - s * 0.3);
+    c.bezierCurveTo(cx + s * 0.55, cy - s * 1.25, cx + s * 1.35, cy - s * 0.45, cx, cy + s * 0.35);
+    c.closePath();
+    c.fill();
+  });
+}
+
+function textPoints(w: number, h: number, text: string): Pt[] {
+  return samplePointsFromDraw(w, h, 4, (c) => {
+    c.fillStyle = "white";
+    c.strokeStyle = "white";
+    c.lineWidth = 6;
+    c.lineJoin = "round";
+    const fontSize = Math.min(w / (text.length * 0.58), h * 0.78);
+    c.font = `900 ${fontSize}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+    c.textAlign = "center";
+    c.textBaseline = "middle";
+    c.strokeText(text, w / 2, h / 2);
+    c.fillText(text, w / 2, h / 2);
+  });
+}
+
+function resampleTo(pts: Pt[], n: number): Pt[] {
   if (pts.length === 0) return new Array(n).fill({ x: 0, y: 0 });
-  if (pts.length === n) return pts;
   const out = new Array(n);
-  for (let i = 0; i < n; i++) {
-    out[i] = pts[Math.floor((i / n) * pts.length)];
-  }
-  // Shuffle to randomize which particle claims which target (looks more organic)
+  for (let i = 0; i < n; i++) out[i] = pts[Math.floor((i / n) * pts.length)];
+  // Light shuffle so particle identity isn't correlated with x
   for (let i = out.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [out[i], out[j]] = [out[j], out[i]];
@@ -77,162 +98,237 @@ function normalizeToCount(pts: { x: number; y: number }[], n: number) {
   return out;
 }
 
+// Phase durations (ms) — cycle totals to ~7s per word
+const T = {
+  heartHold: 1600,
+  toStreak: 250,
+  streakToText: 950,
+  textHold: 1500,
+  ballSweep: 1700,
+  ballToHeart: 900,
+};
+
+type Phase = "heartHold" | "toStreak" | "streakToText" | "textHold" | "ballSweep" | "ballToHeart";
+
 export default function ParticleMorph({
   words,
-  width = 600,
+  width = 560,
   height = 200,
-  holdMs = 2200,
-  morphMs = 1200,
-  particleSize = 2.2,
-  particleCount = 1400,
+  particleCount = 500,
 }: Props) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const wrap = wrapRef.current;
+    if (!wrap) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    ctx.scale(dpr, dpr);
+    // --- Build shape targets ---
+    const heart = resampleTo(heartPoints(width, height), particleCount);
+    const texts = words.map((w) => resampleTo(textPoints(width, height, w), particleCount));
 
-    // --- Build target point sets (heart + each word) ---
-    const SAMPLE_STEP = 3;
-
-    const heartPoints = samplePoints(
-      width,
-      height,
-      (c) => {
-        const cx = width / 2;
-        const cy = height / 2 + 8;
-        const s = Math.min(width, height) * 0.38;
-        c.fillStyle = "white";
-        c.beginPath();
-        c.moveTo(cx, cy + s * 0.35);
-        c.bezierCurveTo(cx - s * 1.35, cy - s * 0.45, cx - s * 0.55, cy - s * 1.25, cx, cy - s * 0.3);
-        c.bezierCurveTo(cx + s * 0.55, cy - s * 1.25, cx + s * 1.35, cy - s * 0.45, cx, cy + s * 0.35);
-        c.closePath();
-        c.fill();
-      },
-      SAMPLE_STEP
-    );
-
-    const wordPointSets = words.map((word) =>
-      samplePoints(
-        width,
-        height,
-        (c) => {
-          c.fillStyle = "white";
-          c.strokeStyle = "white";
-          c.lineWidth = 6;
-          c.lineJoin = "round";
-          const fontSize = Math.min(width / (word.length * 0.6), height * 0.75);
-          c.font = `900 ${fontSize}px system-ui, -apple-system, "Segoe UI", sans-serif`;
-          c.textAlign = "center";
-          c.textBaseline = "middle";
-          c.strokeText(word, width / 2, height / 2);
-          c.fillText(word, width / 2, height / 2);
-        },
-        SAMPLE_STEP
-      )
-    );
-
-    // Target sequence: heart, word0, heart, word1, heart, ...
-    const targets: { x: number; y: number }[][] = [];
-    for (let i = 0; i < words.length; i++) {
-      targets.push(normalizeToCount(heartPoints, particleCount));
-      targets.push(normalizeToCount(wordPointSets[i], particleCount));
-    }
-
-    // --- Initialize particles at first target ---
-    const particles: Particle[] = new Array(particleCount).fill(null).map((_, i) => {
-      const start = hashPick(targets[0], i);
-      // Slightly scatter initial positions for a soft fade-in
-      return {
-        x: start.x + (Math.random() - 0.5) * 40,
-        y: start.y + (Math.random() - 0.5) * 40,
-        tx: start.x,
-        ty: start.y,
+    // --- Create particle elements ---
+    const particles: Particle[] = [];
+    for (let i = 0; i < particleCount; i++) {
+      const el = document.createElement("div");
+      el.className = "pm-particle";
+      wrap.appendChild(el);
+      const start = heart[i];
+      particles.push({
+        el,
+        x: start.x,
+        y: start.y,
         vx: 0,
         vy: 0,
+        tx: start.x,
+        ty: start.y,
+        captured: false,
         phase: Math.random() * Math.PI * 2,
-        amp: 0.6 + Math.random() * 1.6,
-        hue: 310 + Math.random() * 40, // magenta → pink → purple spectrum
-      };
-    });
+      });
+    }
 
-    // --- Animation loop ---
-    let stateIdx = 0;
-    let lastSwitch = performance.now();
-    let rafId = 0;
+    // --- State machine ---
+    let wordIdx = 0;
+    let phase: Phase = "heartHold";
+    let phaseStart = performance.now();
+    // Ball sweep state
+    let ballX = -40;
+    let ballY = height / 2;
 
-    const setTargets = (targetPts: { x: number; y: number }[]) => {
+    const setTargetsFromArray = (arr: Pt[]) => {
       for (let i = 0; i < particles.length; i++) {
-        const t = targetPts[i];
-        particles[i].tx = t.x;
-        particles[i].ty = t.y;
+        particles[i].tx = arr[i].x;
+        particles[i].ty = arr[i].y;
       }
     };
 
+    const kickStreak = () => {
+      // All particles get a strong rightward velocity + small vertical jitter
+      for (const p of particles) {
+        p.vx = 18 + Math.random() * 10;
+        p.vy = (Math.random() - 0.5) * 3;
+      }
+    };
+
+    let rafId = 0;
     const loop = (now: number) => {
-      const elapsed = now - lastSwitch;
-      if (elapsed >= holdMs + morphMs) {
-        stateIdx = (stateIdx + 1) % targets.length;
-        setTargets(targets[stateIdx]);
-        lastSwitch = now;
+      const elapsed = now - phaseStart;
+      const target = T[phase];
+
+      // --- Phase transitions ---
+      if (elapsed >= target) {
+        phaseStart = now;
+        if (phase === "heartHold") {
+          phase = "toStreak";
+          kickStreak();
+        } else if (phase === "toStreak") {
+          phase = "streakToText";
+          setTargetsFromArray(texts[wordIdx]);
+        } else if (phase === "streakToText") {
+          phase = "textHold";
+        } else if (phase === "textHold") {
+          phase = "ballSweep";
+          ballX = -60;
+          ballY = height / 2;
+          for (const p of particles) p.captured = false;
+        } else if (phase === "ballSweep") {
+          phase = "ballToHeart";
+          setTargetsFromArray(heart);
+          for (const p of particles) p.captured = false;
+        } else {
+          phase = "heartHold";
+          wordIdx = (wordIdx + 1) % words.length;
+        }
       }
 
-      // Motion trails — erase alpha channel slightly each frame so old particles fade
-      // without filling with a background color (keeps the canvas transparent).
-      ctx.globalCompositeOperation = "destination-out";
-      ctx.fillStyle = "rgba(0, 0, 0, 0.16)";
-      ctx.fillRect(0, 0, width, height);
+      // --- Per-frame updates ---
+      let filterStr = "";
+      if (phase === "toStreak") {
+        // Free-flight with blur trail
+        const t = elapsed / T.toStreak;
+        filterStr = `blur(${3 + t * 5}px)`;
+        for (const p of particles) {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy *= 0.97;
+        }
+      } else if (phase === "streakToText") {
+        const t = elapsed / T.streakToText;
+        filterStr = `blur(${Math.max(0, 6 - t * 8)}px)`;
+        for (const p of particles) {
+          const ax = (p.tx - p.x) * 0.055;
+          const ay = (p.ty - p.y) * 0.055;
+          p.vx = (p.vx + ax) * 0.82;
+          p.vy = (p.vy + ay) * 0.82;
+          p.x += p.vx;
+          p.y += p.vy;
+        }
+      } else if (phase === "heartHold" || phase === "textHold") {
+        // Gentle settle + wobble
+        for (const p of particles) {
+          const ax = (p.tx - p.x) * 0.08;
+          const ay = (p.ty - p.y) * 0.08;
+          p.vx = (p.vx + ax) * 0.82;
+          p.vy = (p.vy + ay) * 0.82;
+          p.vx += Math.sin(now * 0.001 + p.phase) * 0.04;
+          p.vy += Math.cos(now * 0.0012 + p.phase) * 0.04;
+          p.x += p.vx;
+          p.y += p.vy;
+        }
+      } else if (phase === "ballSweep") {
+        // Ball position eases left → right across the full width
+        const t = elapsed / T.ballSweep;
+        const ease = t * t * (3 - 2 * t);
+        ballX = -60 + (width + 120) * ease;
+        ballY = height / 2 + Math.sin(t * Math.PI * 2) * 8;
 
-      ctx.globalCompositeOperation = "lighter";
-
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
-
-        // Spring toward target with friction
-        const ax = (p.tx - p.x) * 0.06;
-        const ay = (p.ty - p.y) * 0.06;
-        p.vx = (p.vx + ax) * 0.86;
-        p.vy = (p.vy + ay) * 0.86;
-
-        // Small organic wobble
-        p.vx += Math.sin(now * 0.001 + p.phase) * p.amp * 0.03;
-        p.vy += Math.cos(now * 0.0012 + p.phase) * p.amp * 0.03;
-
-        p.x += p.vx;
-        p.y += p.vy;
-
-        // Particle color: HSL with hue from particle
-        const speed = Math.min(Math.hypot(p.vx, p.vy) / 3, 1);
-        const lightness = 60 + speed * 15;
-        ctx.fillStyle = `hsla(${p.hue}, 90%, ${lightness}%, 0.9)`;
-        ctx.fillRect(p.x, p.y, particleSize, particleSize);
+        for (const p of particles) {
+          if (!p.captured && p.tx < ballX + 30) {
+            p.captured = true;
+          }
+          if (p.captured) {
+            // Particle is pulled to ball center + follows with slight trail
+            const dx = ballX - p.x;
+            const dy = ballY - p.y;
+            p.vx = (p.vx + dx * 0.08) * 0.82;
+            p.vy = (p.vy + dy * 0.08) * 0.82;
+            p.x += p.vx;
+            p.y += p.vy;
+          } else {
+            // Stay at text position with gentle idle
+            const ax = (p.tx - p.x) * 0.18;
+            const ay = (p.ty - p.y) * 0.18;
+            p.vx = (p.vx + ax) * 0.7;
+            p.vy = (p.vy + ay) * 0.7;
+            p.x += p.vx;
+            p.y += p.vy;
+          }
+        }
+      } else if (phase === "ballToHeart") {
+        // All particles travel to their heart target
+        const t = elapsed / T.ballToHeart;
+        filterStr = `blur(${Math.max(0, 4 - t * 6)}px)`;
+        for (const p of particles) {
+          const ax = (p.tx - p.x) * 0.08;
+          const ay = (p.ty - p.y) * 0.08;
+          p.vx = (p.vx + ax) * 0.85;
+          p.vy = (p.vy + ay) * 0.85;
+          p.x += p.vx;
+          p.y += p.vy;
+        }
       }
 
-      ctx.globalCompositeOperation = "source-over";
+      // Apply wrapper filter for the streak blur phases
+      wrap.style.filter = filterStr || "";
+
+      // Write transforms (batch, one style.transform per frame)
+      for (const p of particles) {
+        // Brightness from speed — faster = brighter trail look
+        const speed = Math.min(Math.hypot(p.vx, p.vy), 28);
+        const scaleX = phase === "toStreak" ? 1 + speed * 0.35 : 1;
+        p.el.style.transform = `translate3d(${p.x}px, ${p.y}px, 0) scaleX(${scaleX})`;
+      }
+
       rafId = requestAnimationFrame(loop);
     };
 
     rafId = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(rafId);
-  }, [words, width, height, holdMs, morphMs, particleSize, particleCount]);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      for (const p of particles) p.el.remove();
+    };
+  }, [words, width, height, particleCount]);
 
   return (
-    <canvas
-      ref={canvasRef}
+    <div
+      ref={wrapRef}
+      className="pm-wrap"
       style={{
+        position: "relative",
         width: `${width}px`,
         height: `${height}px`,
         maxWidth: "100%",
-        display: "block",
       }}
-    />
+    >
+      <style>{`
+        .pm-wrap { transition: filter 0.1s linear; }
+        .pm-particle {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 4px;
+          height: 4px;
+          border-radius: 999px;
+          background: #ff3377;
+          box-shadow:
+            0 0 4px rgba(255, 51, 119, 0.85),
+            0 0 10px rgba(255, 20, 90, 0.55);
+          mix-blend-mode: screen;
+          pointer-events: none;
+          will-change: transform;
+          transform-origin: center center;
+        }
+      `}</style>
+    </div>
   );
 }
