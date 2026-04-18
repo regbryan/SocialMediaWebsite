@@ -161,7 +161,7 @@ export default function Portfolio() {
                           alt={`${item.title} — ${item.subtitle}`}
                           fill
                           sizes="560px"
-                          style={{ objectFit: "cover", objectPosition: "top center" }}
+                          style={{ objectFit: "contain", objectPosition: "center" }}
                         />
                       </div>
 
@@ -349,7 +349,7 @@ export default function Portfolio() {
                     alt={`${lightbox.title} — ${lightbox.subtitle}`}
                     fill
                     sizes="900px"
-                    style={{ objectFit: "cover", objectPosition: "top center" }}
+                    style={{ objectFit: "contain", objectPosition: "center" }}
                     priority
                   />
                   <div
