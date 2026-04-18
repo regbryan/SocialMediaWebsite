@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import LightRays from "./LightRays";
 
 const words = ["VIRAL", "GROWTH", "REACH", "VIEWS", "LOYALTY", "IMPACT"];
 const HOLD_MS = 2000;
@@ -61,10 +62,18 @@ export default function HeroVideo() {
         paddingRight: "clamp(24px, 6vw, 120px)",
       }}
     >
-      {/* Flowing gradient blobs */}
-      <div className="blob blob-a" />
-      <div className="blob blob-b" />
-      <div className="blob blob-c" />
+      {/* WebGL light rays — interactive, cursor-tracking */}
+      <LightRays
+        raysOrigin="top-center"
+        raysColor="#8b5cff"
+        raysSpeed={1.1}
+        lightSpread={0.9}
+        rayLength={1.6}
+        followMouse
+        mouseInfluence={0.12}
+        noiseAmount={0.04}
+        distortion={0.04}
+      />
 
       {/* Subtle grid */}
       <div className="hero-grid-overlay" />
@@ -117,46 +126,6 @@ export default function HeroVideo() {
       </div>
 
       <style>{`
-        .blob {
-          position: absolute;
-          border-radius: 50%;
-          filter: blur(80px);
-          pointer-events: none;
-          z-index: 1;
-          mix-blend-mode: screen;
-        }
-        .blob-a {
-          width: 360px; height: 360px;
-          background: radial-gradient(circle, rgba(139,92,255,0.55) 0%, transparent 70%);
-          top: 10%; left: 15%;
-          animation: floatA 14s ease-in-out infinite;
-        }
-        .blob-b {
-          width: 420px; height: 420px;
-          background: radial-gradient(circle, rgba(59,129,255,0.45) 0%, transparent 70%);
-          bottom: 5%; right: 10%;
-          animation: floatB 18s ease-in-out infinite;
-        }
-        .blob-c {
-          width: 280px; height: 280px;
-          background: radial-gradient(circle, rgba(236,72,153,0.4) 0%, transparent 70%);
-          top: 50%; left: 55%;
-          animation: floatC 16s ease-in-out infinite;
-        }
-        @keyframes floatA {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(60px, -40px) scale(1.15); }
-          66% { transform: translate(-30px, 50px) scale(0.9); }
-        }
-        @keyframes floatB {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(-80px, -30px) scale(1.2); }
-        }
-        @keyframes floatC {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          40% { transform: translate(40px, 60px) scale(0.8); }
-          70% { transform: translate(-50px, -40px) scale(1.1); }
-        }
         .hero-grid-overlay {
           position: absolute; inset: 0;
           background-image:

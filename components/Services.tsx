@@ -1,3 +1,5 @@
+import GlowingEdgeCard from "./GlowingEdgeCard";
+
 const services = [
   {
     icon: "📸",
@@ -78,85 +80,80 @@ export default function Services() {
           style={{ gap: "24px" }}
         >
           {services.map((service) => (
-            <div
-              key={service.title}
-              className="flex flex-col"
-              style={{
-                backgroundColor: "#0f0f1a",
-                border: "1px solid #1a1a2e",
-                borderRadius: "20px",
-                padding: "36px",
-                gap: "20px",
-              }}
-            >
-              {/* Icon */}
+            <GlowingEdgeCard key={service.title}>
               <div
-                className="flex items-center justify-center"
-                style={{
-                  width: "56px",
-                  height: "56px",
-                  backgroundColor: "#261a40",
-                  borderRadius: "14px",
-                  fontSize: "28px",
-                }}
-              >
-                {service.icon}
-              </div>
-
-              {/* Title & Description */}
-              <div className="flex flex-col" style={{ gap: "10px" }}>
-                <h3
-                  style={{
-                    fontSize: "22px",
-                    fontWeight: 600,
-                    color: "white",
-                    lineHeight: 1.25,
-                    margin: 0,
-                  }}
-                >
-                  {service.title}
-                </h3>
-                <p
-                  style={{
-                    fontSize: "14px",
-                    lineHeight: 1.65,
-                    color: "#9999a6",
-                    margin: 0,
-                  }}
-                >
-                  {service.description}
-                </p>
-              </div>
-
-              {/* Features */}
-              <ul
                 className="flex flex-col"
-                style={{ gap: "10px", listStyle: "none", padding: 0, margin: 0 }}
+                style={{ padding: "36px", gap: "20px", height: "100%" }}
               >
-                {service.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-center"
+                {/* Icon */}
+                <div
+                  className="flex items-center justify-center"
+                  style={{
+                    width: "56px",
+                    height: "56px",
+                    backgroundColor: "#261a40",
+                    borderRadius: "14px",
+                    fontSize: "28px",
+                  }}
+                >
+                  {service.icon}
+                </div>
+
+                {/* Title & Description */}
+                <div className="flex flex-col" style={{ gap: "10px" }}>
+                  <h3
                     style={{
-                      color: "#bfbfcc",
-                      fontSize: "13px",
-                      gap: "10px",
+                      fontSize: "22px",
+                      fontWeight: 600,
+                      color: "white",
+                      lineHeight: 1.25,
+                      margin: 0,
                     }}
                   >
-                    <span
+                    {service.title}
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: "14px",
+                      lineHeight: 1.65,
+                      color: "#9999a6",
+                      margin: 0,
+                    }}
+                  >
+                    {service.description}
+                  </p>
+                </div>
+
+                {/* Features */}
+                <ul
+                  className="flex flex-col"
+                  style={{ gap: "10px", listStyle: "none", padding: 0, margin: 0 }}
+                >
+                  {service.features.map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-center"
                       style={{
-                        color: "#8b5cff",
-                        fontSize: "14px",
-                        fontWeight: 700,
+                        color: "#bfbfcc",
+                        fontSize: "13px",
+                        gap: "10px",
                       }}
                     >
-                      ✓
-                    </span>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            </div>
+                      <span
+                        style={{
+                          color: "#8b5cff",
+                          fontSize: "14px",
+                          fontWeight: 700,
+                        }}
+                      >
+                        ✓
+                      </span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </GlowingEdgeCard>
           ))}
         </div>
       </div>
