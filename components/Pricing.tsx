@@ -1,30 +1,48 @@
-const plans = [
+"use client";
+
+import { useState } from "react";
+
+type Plan = {
+  label: string;
+  name: string;
+  price: string;
+  period: string;
+  teaser: string;
+  description: string;
+  features: string[];
+  cta: string;
+  href: string;
+  popular?: boolean;
+};
+
+const plans: Plan[] = [
   {
-    label: "STARTER",
+    label: "Starter",
     name: "Starter",
     price: "$497",
-    period: "/month",
-    description: "Perfect for small businesses ready to build a consistent social presence.",
+    period: "/mo",
+    teaser: "5 posts / week · 1 platform",
+    description: "Perfect for small businesses building a consistent social presence.",
     features: [
       "5 posts per week",
-      "1 platform (Instagram or Facebook)",
+      "1 platform (IG or FB)",
       "Custom graphics & captions",
       "Monthly performance report",
       "Email support",
     ],
     cta: "Get Started",
     href: "mailto:hello@socialpulse.media?subject=Starter Plan",
-    popular: false,
   },
   {
-    label: "MOST POPULAR",
+    label: "Most Popular",
     name: "Growth",
     price: "$997",
-    period: "/month",
-    description: "For brands serious about growing their audience across multiple platforms.",
+    period: "/mo",
+    teaser: "7 posts / week · 3 platforms",
+    description: "For brands serious about growing across multiple platforms.",
     features: [
       "7 posts per week",
-      "3 platforms (Instagram, Facebook, LinkedIn)",
+      "3 platforms (IG · FB · LinkedIn)",
       "Reels & carousel content",
       "Weekly performance reports",
       "Priority support",
@@ -35,10 +53,11 @@ const plans = [
     popular: true,
   },
   {
-    label: "FOR AGENCIES",
+    label: "Agency",
     name: "Agency",
     price: "Custom",
     period: "",
+    teaser: "Unlimited · All platforms",
     description: "Full-service content production for agencies and high-volume brands.",
     features: [
       "Unlimited posts",
@@ -49,9 +68,369 @@ const plans = [
     ],
     cta: "Contact Us",
     href: "mailto:hello@socialpulse.media?subject=Agency Plan",
-    popular: false,
   },
 ];
+
+function PricingCard({ plan }: { plan: Plan }) {
+  const [flipped, setFlipped] = useState(false);
+
+  const frontBg = plan.popular
+    ? "linear-gradient(145deg, #1a0f3a 0%, #2a1566 55%, #3b1f8a 100%)"
+    : "linear-gradient(145deg, #0d0d1a 0%, #141428 60%, #1a1a34 100%)";
+  const backBg = plan.popular
+    ? "linear-gradient(145deg, #0f2656 0%, #1a3c8a 60%, #2448b8 100%)"
+    : "linear-gradient(145deg, #0f0f1a 0%, #1a1a2e 60%, #212139 100%)";
+
+  return (
+    <div
+      className="pricing-scene"
+      style={{ perspective: "1200px", width: "100%", maxWidth: "340px" }}
+    >
+      <div
+        className={`pricing-card-wrap ${flipped ? "flipped" : ""}`}
+        style={{ width: "100%", height: "480px", cursor: "pointer" }}
+        onClick={() => setFlipped((f) => !f)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setFlipped((f) => !f);
+          }
+        }}
+      >
+        <div
+          className="pricing-card-inner"
+          style={{
+            width: "100%",
+            height: "100%",
+            position: "relative",
+            transformStyle: "preserve-3d",
+            transition: "transform 0.8s cubic-bezier(0.4, 0.2, 0.2, 1)",
+            transform: flipped ? "rotateY(180deg)" : "rotateY(0)",
+          }}
+        >
+          {/* FRONT */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: "22px",
+              padding: "30px 28px 24px",
+              background: frontBg,
+              border: plan.popular ? "1px solid rgba(139,92,255,0.45)" : "1px solid rgba(255,255,255,0.08)",
+              boxShadow: plan.popular
+                ? "0 30px 80px rgba(0,0,0,0.5), 0 0 40px rgba(139,92,255,0.18), inset 0 0 0 1px rgba(192,132,252,0.15)"
+                : "0 30px 80px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.04)",
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            {plan.popular && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "-12px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  background: "linear-gradient(90deg, #8b5cff, #3b81ff)",
+                  color: "white",
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  padding: "5px 14px",
+                  borderRadius: "999px",
+                  whiteSpace: "nowrap",
+                  boxShadow: "0 6px 16px rgba(139,92,255,0.4)",
+                }}
+              >
+                Most Popular
+              </div>
+            )}
+
+            {/* Category tag */}
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                fontSize: "10px",
+                fontWeight: 600,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                color: "rgba(192,132,252,0.9)",
+                marginBottom: "14px",
+              }}
+            >
+              <span style={{ width: "20px", height: "1px", background: "rgba(192,132,252,0.6)" }} />
+              {plan.label}
+            </div>
+
+            {/* Title */}
+            <div
+              style={{
+                fontSize: "30px",
+                fontWeight: 700,
+                color: "#fff",
+                letterSpacing: "-0.02em",
+                marginBottom: "14px",
+              }}
+            >
+              {plan.name}
+            </div>
+
+            {/* Price */}
+            <div style={{ display: "flex", alignItems: "baseline", gap: "4px", marginBottom: "6px" }}>
+              {plan.price.startsWith("$") ? (
+                <>
+                  <span style={{ fontSize: "18px", fontWeight: 500, color: "rgba(192,132,252,0.95)" }}>$</span>
+                  <span style={{ fontSize: "46px", fontWeight: 300, color: "#fff", lineHeight: 1 }}>
+                    {plan.price.slice(1)}
+                  </span>
+                </>
+              ) : (
+                <span style={{ fontSize: "38px", fontWeight: 400, color: "#fff", lineHeight: 1 }}>{plan.price}</span>
+              )}
+              {plan.period && (
+                <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.45)", fontWeight: 300 }}>{plan.period}</span>
+              )}
+            </div>
+            <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", letterSpacing: "0.03em", marginBottom: "22px" }}>
+              billed monthly · cancel anytime
+            </div>
+
+            {/* Divider */}
+            <div
+              style={{
+                width: "40px",
+                height: "1px",
+                background: "linear-gradient(90deg, rgba(192,132,252,0.6), transparent)",
+                marginBottom: "22px",
+              }}
+            />
+
+            {/* Teaser */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                fontSize: "13px",
+                color: "rgba(255,255,255,0.7)",
+                marginBottom: "20px",
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(192,132,252,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              {plan.teaser}
+            </div>
+
+            <div style={{ flex: 1 }} />
+
+            {/* Choose prompt */}
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                fontSize: "11px",
+                fontWeight: 600,
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                color: "rgba(192,132,252,0.95)",
+                borderBottom: "1px solid rgba(192,132,252,0.25)",
+                paddingBottom: "10px",
+                marginBottom: "18px",
+                width: "fit-content",
+              }}
+            >
+              See Full Details
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </div>
+
+            {/* Visual accent */}
+            <div
+              style={{
+                borderRadius: "14px",
+                overflow: "hidden",
+                height: "96px",
+                position: "relative",
+                background: "linear-gradient(180deg, rgba(139,92,255,0.22) 0%, rgba(59,129,255,0.12) 50%, rgba(0,0,0,0.2) 100%)",
+                border: "1px solid rgba(255,255,255,0.04)",
+              }}
+            >
+              {/* Animated dot pattern */}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  backgroundImage: "radial-gradient(circle at 1px 1px, rgba(192,132,252,0.25) 1px, transparent 0)",
+                  backgroundSize: "14px 14px",
+                  maskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)",
+                  WebkitMaskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)",
+                }}
+              />
+              {/* Floating glow */}
+              <div
+                className="pricing-card-glow"
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  width: "140px",
+                  height: "60px",
+                  transform: "translate(-50%, -50%)",
+                  background: "radial-gradient(ellipse, rgba(192,132,252,0.5) 0%, rgba(59,129,255,0.18) 50%, transparent 80%)",
+                  filter: "blur(20px)",
+                  animation: "pricingGlowFloat 4s ease-in-out infinite",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* BACK */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: "22px",
+              padding: "30px 28px 24px",
+              background: backBg,
+              border: plan.popular ? "1px solid rgba(139,92,255,0.45)" : "1px solid rgba(255,255,255,0.08)",
+              boxShadow: "0 30px 80px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.04)",
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
+              transform: "rotateY(180deg)",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            {/* Back header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px" }}>
+              <span
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: "rgba(192,132,252,0.9)",
+                }}
+              >
+                What&apos;s Included
+              </span>
+              <span style={{ fontSize: "18px", fontWeight: 700, color: "white", letterSpacing: "-0.01em" }}>{plan.name}</span>
+            </div>
+
+            <div
+              style={{
+                width: "100%",
+                height: "1px",
+                background: "linear-gradient(90deg, transparent, rgba(192,132,252,0.3), transparent)",
+                marginBottom: "20px",
+              }}
+            />
+
+            {/* Description */}
+            <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.65)", lineHeight: 1.6, margin: "0 0 18px" }}>
+              {plan.description}
+            </p>
+
+            {/* Features list */}
+            <ul
+              style={{
+                listStyle: "none",
+                padding: 0,
+                margin: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+                flex: 1,
+              }}
+            >
+              {plan.features.map((f) => (
+                <li
+                  key={f}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "10px",
+                    fontSize: "13px",
+                    color: "rgba(255,255,255,0.82)",
+                    lineHeight: 1.45,
+                  }}
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="url(#pg)"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ marginTop: "2px", flexShrink: 0 }}
+                  >
+                    <defs>
+                      <linearGradient id="pg">
+                        <stop offset="0%" stopColor="#c084fc" />
+                        <stop offset="100%" stopColor="#3b81ff" />
+                      </linearGradient>
+                    </defs>
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+
+            {/* CTA */}
+            <a
+              href={plan.href}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                display: "block",
+                textAlign: "center",
+                padding: "13px 20px",
+                marginTop: "20px",
+                borderRadius: "11px",
+                fontSize: "14px",
+                fontWeight: 600,
+                letterSpacing: "0.02em",
+                textDecoration: "none",
+                background: "linear-gradient(135deg, #8b5cff 0%, #3b81ff 100%)",
+                color: "white",
+                boxShadow: "0 8px 24px rgba(139,92,255,0.35)",
+                cursor: "pointer",
+              }}
+            >
+              {plan.cta}
+            </a>
+
+            {/* Back hint */}
+            <div
+              style={{
+                marginTop: "12px",
+                fontSize: "10px",
+                color: "rgba(255,255,255,0.3)",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                textAlign: "center",
+              }}
+            >
+              ← Click to flip back
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Pricing() {
   return (
@@ -66,13 +445,13 @@ export default function Pricing() {
         {/* Header */}
         <div
           className="flex flex-col items-center"
-          style={{ gap: "16px", marginBottom: "56px", textAlign: "center" }}
+          style={{ gap: "14px", marginBottom: "64px", textAlign: "center" }}
         >
           <span
             style={{
               fontSize: "13px",
               fontWeight: 600,
-              letterSpacing: "0.08em",
+              letterSpacing: "0.18em",
               textTransform: "uppercase",
               color: "#8b5cff",
             }}
@@ -90,150 +469,28 @@ export default function Pricing() {
           >
             Simple, Transparent Pricing
           </h2>
-          <p style={{ fontSize: "17px", color: "#9999a6", maxWidth: "480px", margin: 0 }}>
-            No contracts. No surprises. Cancel anytime.
+          <p style={{ fontSize: "16px", color: "#8a8a96", maxWidth: "480px", margin: 0 }}>
+            Click any card to see full details. No contracts. Cancel anytime.
           </p>
         </div>
 
         {/* Cards */}
         <div
-          className="grid grid-cols-1 md:grid-cols-3"
-          style={{ gap: "24px", alignItems: "stretch" }}
+          className="grid grid-cols-1 md:grid-cols-3 justify-items-center"
+          style={{ gap: "28px", alignItems: "stretch" }}
         >
           {plans.map((plan) => (
-            <div
-              key={plan.name}
-              style={{
-                backgroundColor: plan.popular ? "#0f0f1a" : "#090912",
-                border: plan.popular
-                  ? "1px solid #8b5cff"
-                  : "1px solid #1a1a2e",
-                borderRadius: "20px",
-                padding: "36px 32px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "24px",
-                position: "relative",
-                boxShadow: plan.popular
-                  ? "0 0 40px rgba(139,92,255,0.12)"
-                  : "none",
-              }}
-            >
-              {/* Popular badge */}
-              {plan.popular && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "-14px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    background: "linear-gradient(90deg, #8b5cff, #3b81ff)",
-                    color: "white",
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    padding: "4px 16px",
-                    borderRadius: "999px",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Most Popular
-                </div>
-              )}
-
-              {/* Top */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <span
-                  style={{
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    color: "#8b5cff",
-                  }}
-                >
-                  {plan.label}
-                </span>
-                <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
-                  <span
-                    style={{
-                      fontSize: "clamp(32px, 4vw, 42px)",
-                      fontWeight: 700,
-                      color: "white",
-                      lineHeight: 1,
-                    }}
-                  >
-                    {plan.price}
-                  </span>
-                  {plan.period && (
-                    <span style={{ fontSize: "14px", color: "#9999a6" }}>
-                      {plan.period}
-                    </span>
-                  )}
-                </div>
-                <p style={{ fontSize: "14px", color: "#9999a6", margin: 0, lineHeight: 1.5 }}>
-                  {plan.description}
-                </p>
-              </div>
-
-              {/* Divider */}
-              <div style={{ height: "1px", backgroundColor: "#1a1a2e" }} />
-
-              {/* Features */}
-              <ul
-                style={{
-                  listStyle: "none",
-                  padding: 0,
-                  margin: 0,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
-                  flex: 1,
-                }}
-              >
-                {plan.features.map((f) => (
-                  <li
-                    key={f}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      fontSize: "14px",
-                      color: "#bfbfcc",
-                    }}
-                  >
-                    <span style={{ color: "#8b5cff", fontSize: "16px", lineHeight: 1 }}>✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-
-              {/* CTA */}
-              <a
-                href={plan.href}
-                style={{
-                  display: "block",
-                  textAlign: "center",
-                  padding: "13px 24px",
-                  borderRadius: "10px",
-                  fontSize: "15px",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  background: plan.popular
-                    ? "linear-gradient(135deg, #8b5cff 0%, #3b81ff 100%)"
-                    : "transparent",
-                  border: plan.popular ? "none" : "1px solid #1a1a2e",
-                  color: plan.popular ? "white" : "#bfbfcc",
-                  cursor: "pointer",
-                }}
-              >
-                {plan.cta}
-              </a>
-            </div>
+            <PricingCard key={plan.name} plan={plan} />
           ))}
         </div>
       </div>
+
+      <style>{`
+        @keyframes pricingGlowFloat {
+          0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+          50% { transform: translate(-50%, -55%) scale(1.1); opacity: 1; }
+        }
+      `}</style>
     </section>
   );
 }
