@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 type IconName = "grid" | "layers" | "play" | "briefcase";
 
@@ -92,7 +92,7 @@ const services: Service[] = [
     title: "Carousels",
     tagline: "Teach, don't sell",
     description:
-      "Swipeable educational decks that drive saves, shares, and follows. Value-packed slides your audience actually reads.",
+      "Swipeable educational decks that drive saves, shares, and follows.",
     image: "/portfolio/carousel-5things.png",
     stat: { value: "3x", label: "save rate" },
     tint: "rgba(255,158,109,0.28)",
@@ -161,40 +161,70 @@ const services: Service[] = [
   },
 ];
 
-function NavButton({ dir, onClick, disabled }: { dir: "left" | "right"; onClick: () => void; disabled?: boolean }) {
+// Signed shortest delta from `i` to `active` on a circular list of length `n`
+function circularDelta(i: number, active: number, n: number) {
+  let d = i - active;
+  if (d > n / 2) d -= n;
+  if (d < -n / 2) d += n;
+  return d;
+}
+
+// Compute the 3D transform for a card given its distance from the center slot
+function tunnelTransform(delta: number): { transform: string; opacity: number; zIndex: number } {
+  const abs = Math.abs(delta);
+  if (abs === 0) {
+    return { transform: "translateX(0) translateZ(0) rotateY(0deg) scale(1)", opacity: 1, zIndex: 100 };
+  }
+  // Side cards fan out and recede
+  const sign = delta > 0 ? 1 : -1;
+  const tx = sign * Math.min(abs, 3) * 230; // 230px per step sideways (capped)
+  const tz = -Math.min(abs, 3) * 180; // 180px back per step (capped)
+  const ry = -sign * Math.min(abs, 2) * 32; // tilt toward center
+  const scale = abs === 1 ? 0.88 : abs === 2 ? 0.74 : 0.6;
+  const opacity = abs === 1 ? 0.92 : abs === 2 ? 0.55 : abs === 3 ? 0.18 : 0;
+  const zIndex = 100 - abs;
+  return {
+    transform: `translateX(${tx}px) translateZ(${tz}px) rotateY(${ry}deg) scale(${scale})`,
+    opacity,
+    zIndex,
+  };
+}
+
+function NavButton({ dir, onClick }: { dir: "left" | "right"; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      disabled={disabled}
       aria-label={dir === "left" ? "Previous" : "Next"}
       style={{
-        width: "46px",
-        height: "46px",
+        width: "48px",
+        height: "48px",
         borderRadius: "999px",
         background: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.1)",
-        color: disabled ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.85)",
-        cursor: disabled ? "default" : "pointer",
+        border: "1px solid rgba(255,255,255,0.12)",
+        color: "rgba(255,255,255,0.9)",
+        cursor: "pointer",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         transition: "all 0.2s",
         flexShrink: 0,
-        opacity: disabled ? 0.4 : 1,
         backdropFilter: "blur(8px)",
         WebkitBackdropFilter: "blur(8px)",
+        position: "relative",
+        zIndex: 200,
       }}
       onMouseEnter={(e) => {
-        if (disabled) return;
-        e.currentTarget.style.background = "rgba(139,92,255,0.18)";
-        e.currentTarget.style.borderColor = "rgba(139,92,255,0.45)";
+        e.currentTarget.style.background = "rgba(139,92,255,0.2)";
+        e.currentTarget.style.borderColor = "rgba(139,92,255,0.5)";
+        e.currentTarget.style.transform = "scale(1.05)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.background = "rgba(255,255,255,0.04)";
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+        e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+        e.currentTarget.style.transform = "scale(1)";
       }}
     >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         {dir === "left" ? <polyline points="15 18 9 12 15 6" /> : <polyline points="9 18 15 12 9 6" />}
       </svg>
     </button>
@@ -202,30 +232,25 @@ function NavButton({ dir, onClick, disabled }: { dir: "left" | "right"; onClick:
 }
 
 export default function Services() {
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const [canPrev, setCanPrev] = useState(false);
-  const [canNext, setCanNext] = useState(true);
+  const [activeIdx, setActiveIdx] = useState(0);
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
-  const updateArrows = () => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    setCanPrev(el.scrollLeft > 4);
-    setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
-  };
+  const n = services.length;
+  const go = (dir: 1 | -1) => setActiveIdx((i) => (i + dir + n) % n);
 
+  // Keyboard arrow support
   useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    updateArrows();
-    el.addEventListener("scroll", updateArrows, { passive: true });
-    window.addEventListener("resize", updateArrows);
-    return () => {
-      el.removeEventListener("scroll", updateArrows);
-      window.removeEventListener("resize", updateArrows);
+    if (expandedIdx !== null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") go(-1);
+      if (e.key === "ArrowRight") go(1);
     };
-  }, []);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expandedIdx]);
 
+  // Modal ESC close
   useEffect(() => {
     if (expandedIdx === null) return;
     const onKey = (e: KeyboardEvent) => {
@@ -235,20 +260,12 @@ export default function Services() {
     return () => window.removeEventListener("keydown", onKey);
   }, [expandedIdx]);
 
-  const scrollStep = (dir: 1 | -1) => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const card = el.querySelector(".svc-card") as HTMLElement | null;
-    const step = card ? card.offsetWidth + 20 : 320;
-    el.scrollBy({ left: step * dir, behavior: "smooth" });
-  };
-
   return (
     <section
       id="services"
       style={{
         backgroundColor: "#090912",
-        padding: "100px 0",
+        padding: "110px 0",
         overflow: "hidden",
       }}
     >
@@ -283,212 +300,248 @@ export default function Services() {
         </div>
       </div>
 
-      {/* Carousel with side arrows */}
+      {/* Tunnel carousel */}
       <div
-        className="flex items-center"
         style={{
-          gap: "16px",
+          display: "flex",
+          alignItems: "center",
+          gap: "20px",
           maxWidth: "1440px",
           margin: "48px auto 0",
-          padding: "0 clamp(12px, 3vw, 40px)",
-          position: "relative",
+          padding: "0 clamp(16px, 3vw, 40px)",
         }}
       >
-        <NavButton dir="left" onClick={() => scrollStep(-1)} disabled={!canPrev} />
+        <NavButton dir="left" onClick={() => go(-1)} />
 
         <div
-          ref={scrollerRef}
-          className="svc-scroller"
           style={{
             flex: 1,
-            display: "flex",
-            gap: "20px",
-            overflowX: "auto",
-            overflowY: "hidden",
-            scrollSnapType: "x mandatory",
-            scrollPaddingLeft: "8px",
-            padding: "10px 8px 20px",
-            WebkitOverflowScrolling: "touch",
+            position: "relative",
+            height: "520px",
+            perspective: "1800px",
+            perspectiveOrigin: "50% 50%",
           }}
         >
-          {services.map((s, i) => (
-            <article
-              key={s.title}
-              className="svc-card"
-              onClick={() => setExpandedIdx(i)}
-              style={{
-                flex: "0 0 auto",
-                width: "clamp(280px, 30vw, 340px)",
-                height: "440px",
-                scrollSnapAlign: "start",
-                borderRadius: "20px",
-                overflow: "hidden",
-                position: "relative",
-                background: "#0f0f1a",
-                border: "1px solid rgba(255,255,255,0.06)",
-                cursor: "pointer",
-                transition: "transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.3s, box-shadow 0.3s",
-                willChange: "transform",
-                boxShadow: "0 14px 40px rgba(0,0,0,0.4)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-6px)";
-                e.currentTarget.style.borderColor = "rgba(192,132,252,0.3)";
-                e.currentTarget.style.boxShadow = "0 20px 55px rgba(0,0,0,0.55)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
-                e.currentTarget.style.boxShadow = "0 14px 40px rgba(0,0,0,0.4)";
-              }}
-            >
-              {/* Background image */}
-              <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
-                <Image src={s.image} alt={s.title} fill sizes="340px" style={{ objectFit: "cover" }} priority={i < 2} />
-              </div>
-
-              {/* Tint */}
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: `radial-gradient(ellipse at 25% 20%, ${s.tint} 0%, transparent 55%)`,
-                  zIndex: 1,
-                  mixBlendMode: "screen",
-                }}
-              />
-
-              {/* Bottom scrim */}
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background:
-                    "linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.3) 35%, rgba(9,9,18,0.92) 80%, #090912 100%)",
-                  zIndex: 2,
-                }}
-              />
-
-              {/* Top chips */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: "14px",
-                  left: "14px",
-                  right: "14px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  zIndex: 4,
-                }}
-              >
-                <div
-                  className="flex items-center justify-center"
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              transformStyle: "preserve-3d",
+            }}
+          >
+            {services.map((s, i) => {
+              const delta = circularDelta(i, activeIdx, n);
+              const { transform, opacity, zIndex } = tunnelTransform(delta);
+              const isCenter = delta === 0;
+              return (
+                <article
+                  key={s.title}
+                  onClick={() => {
+                    if (isCenter) setExpandedIdx(i);
+                    else setActiveIdx(i);
+                  }}
                   style={{
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: "10px",
-                    background: "rgba(10,10,18,0.6)",
-                    backdropFilter: "blur(10px)",
-                    WebkitBackdropFilter: "blur(10px)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    width: "320px",
+                    height: "440px",
+                    marginLeft: "-160px",
+                    marginTop: "-220px",
+                    transform,
+                    opacity,
+                    zIndex,
+                    transition: "transform 0.7s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease",
+                    transformStyle: "preserve-3d",
+                    cursor: isCenter ? "pointer" : "pointer",
+                    borderRadius: "22px",
+                    overflow: "hidden",
+                    background: "#0f0f1a",
+                    border: isCenter ? "1px solid rgba(192,132,252,0.35)" : "1px solid rgba(255,255,255,0.06)",
+                    boxShadow: isCenter
+                      ? "0 50px 120px rgba(0,0,0,0.75), 0 0 0 1px rgba(192,132,252,0.2), 0 0 60px rgba(139,92,255,0.2)"
+                      : "0 30px 70px rgba(0,0,0,0.55)",
+                    willChange: "transform, opacity",
                   }}
                 >
-                  <Icon name={s.icon} />
-                </div>
-                <span
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: 600,
-                    letterSpacing: "0.15em",
-                    textTransform: "uppercase",
-                    color: "rgba(255,255,255,0.75)",
-                    background: "rgba(10,10,18,0.55)",
-                    backdropFilter: "blur(10px)",
-                    WebkitBackdropFilter: "blur(10px)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    padding: "6px 10px",
-                    borderRadius: "999px",
-                  }}
-                >
-                  {s.tagline}
-                </span>
-              </div>
+                  {/* Background image */}
+                  <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
+                    <Image src={s.image} alt={s.title} fill sizes="340px" style={{ objectFit: "cover" }} priority={i < 3} />
+                  </div>
 
-              {/* Bottom content */}
-              <div
-                style={{
-                  position: "absolute",
-                  left: "22px",
-                  right: "22px",
-                  bottom: "22px",
-                  zIndex: 4,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
-                }}
-              >
-                <h3
-                  style={{
-                    fontSize: "24px",
-                    fontWeight: 700,
-                    color: "white",
-                    lineHeight: 1.15,
-                    letterSpacing: "-0.02em",
-                    margin: 0,
-                  }}
-                >
-                  {s.title}
-                </h3>
-                <p
-                  style={{
-                    fontSize: "13px",
-                    lineHeight: 1.55,
-                    color: "rgba(220,220,232,0.82)",
-                    margin: 0,
-                  }}
-                >
-                  {s.description}
-                </p>
-                <div className="flex items-center" style={{ gap: "10px", marginTop: "4px" }}>
-                  <span
+                  {/* Tint */}
+                  <div
                     style={{
-                      fontSize: "20px",
-                      fontWeight: 700,
-                      background: "linear-gradient(135deg, #c084fc, #3b81ff)",
-                      WebkitBackgroundClip: "text",
-                      backgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      letterSpacing: "-0.01em",
+                      position: "absolute",
+                      inset: 0,
+                      background: `radial-gradient(ellipse at 25% 20%, ${s.tint} 0%, transparent 55%)`,
+                      zIndex: 1,
+                      mixBlendMode: "screen",
+                    }}
+                  />
+
+                  {/* Bottom scrim */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background:
+                        "linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.3) 35%, rgba(9,9,18,0.93) 80%, #090912 100%)",
+                      zIndex: 2,
+                    }}
+                  />
+
+                  {/* Top chips */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "14px",
+                      left: "14px",
+                      right: "14px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      zIndex: 4,
                     }}
                   >
-                    {s.stat.value}
-                  </span>
-                  <span
+                    <div
+                      style={{
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "10px",
+                        background: "rgba(10,10,18,0.6)",
+                        backdropFilter: "blur(10px)",
+                        WebkitBackdropFilter: "blur(10px)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Icon name={s.icon} />
+                    </div>
+                    <span
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: 600,
+                        letterSpacing: "0.15em",
+                        textTransform: "uppercase",
+                        color: "rgba(255,255,255,0.75)",
+                        background: "rgba(10,10,18,0.55)",
+                        backdropFilter: "blur(10px)",
+                        WebkitBackdropFilter: "blur(10px)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        padding: "6px 10px",
+                        borderRadius: "999px",
+                      }}
+                    >
+                      {s.tagline}
+                    </span>
+                  </div>
+
+                  {/* Bottom content */}
+                  <div
                     style={{
-                      fontSize: "11px",
-                      color: "rgba(255,255,255,0.55)",
-                      letterSpacing: "0.05em",
-                      textTransform: "uppercase",
+                      position: "absolute",
+                      left: "22px",
+                      right: "22px",
+                      bottom: "22px",
+                      zIndex: 4,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "10px",
                     }}
                   >
-                    {s.stat.label}
-                  </span>
-                </div>
-              </div>
-            </article>
-          ))}
+                    <h3
+                      style={{
+                        fontSize: "26px",
+                        fontWeight: 700,
+                        color: "white",
+                        lineHeight: 1.15,
+                        letterSpacing: "-0.02em",
+                        margin: 0,
+                      }}
+                    >
+                      {s.title}
+                    </h3>
+                    <p
+                      style={{
+                        fontSize: "13px",
+                        lineHeight: 1.55,
+                        color: "rgba(220,220,232,0.82)",
+                        margin: 0,
+                      }}
+                    >
+                      {s.description}
+                    </p>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "4px" }}>
+                      <span
+                        style={{
+                          fontSize: "20px",
+                          fontWeight: 700,
+                          background: "linear-gradient(135deg, #c084fc, #3b81ff)",
+                          WebkitBackgroundClip: "text",
+                          backgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                          letterSpacing: "-0.01em",
+                        }}
+                      >
+                        {s.stat.value}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          color: "rgba(255,255,255,0.55)",
+                          letterSpacing: "0.05em",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {s.stat.label}
+                      </span>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </div>
 
-        <NavButton dir="right" onClick={() => scrollStep(1)} disabled={!canNext} />
+        <NavButton dir="right" onClick={() => go(1)} />
       </div>
 
-      <style>{`
-        .svc-scroller::-webkit-scrollbar { display: none; }
-        .svc-scroller { scrollbar-width: none; }
-      `}</style>
+      {/* Progress dots */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "10px",
+          marginTop: "32px",
+        }}
+      >
+        {services.map((_, i) => {
+          const active = i === activeIdx;
+          return (
+            <button
+              key={i}
+              onClick={() => setActiveIdx(i)}
+              aria-label={`Go to ${services[i].title}`}
+              style={{
+                width: active ? "28px" : "8px",
+                height: "8px",
+                borderRadius: "999px",
+                border: "none",
+                background: active ? "linear-gradient(90deg, #8b5cff, #3b81ff)" : "rgba(255,255,255,0.15)",
+                cursor: "pointer",
+                transition: "width 0.35s cubic-bezier(0.22, 1, 0.36, 1), background 0.35s",
+                padding: 0,
+              }}
+            />
+          );
+        })}
+      </div>
 
-      {/* Expanded detail modal */}
+      {/* Detail modal (reused) */}
       {expandedIdx !== null && (
         <div
           onClick={() => setExpandedIdx(null)}
@@ -547,8 +600,6 @@ export default function Services() {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        backdropFilter: "blur(8px)",
-                        WebkitBackdropFilter: "blur(8px)",
                       }}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -557,20 +608,7 @@ export default function Services() {
                       </svg>
                     </button>
                     <div style={{ position: "absolute", bottom: "18px", left: "20px", right: "20px", display: "flex", alignItems: "center", gap: "12px" }}>
-                      <div
-                        style={{
-                          width: "42px",
-                          height: "42px",
-                          borderRadius: "11px",
-                          background: "rgba(10,10,18,0.6)",
-                          backdropFilter: "blur(10px)",
-                          WebkitBackdropFilter: "blur(10px)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
+                      <div style={{ width: "42px", height: "42px", borderRadius: "11px", background: "rgba(10,10,18,0.6)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <Icon name={s.icon} size={22} />
                       </div>
                       <div>
@@ -581,10 +619,7 @@ export default function Services() {
                   </div>
 
                   <div style={{ padding: "22px 24px 24px", overflow: "auto", display: "flex", flexDirection: "column", gap: "16px" }}>
-                    <p style={{ fontSize: "14px", lineHeight: 1.6, color: "rgba(220,220,232,0.88)", margin: 0 }}>
-                      {s.description}
-                    </p>
-
+                    <p style={{ fontSize: "14px", lineHeight: 1.6, color: "rgba(220,220,232,0.88)", margin: 0 }}>{s.description}</p>
                     <ul style={{ display: "flex", flexDirection: "column", gap: "8px", listStyle: "none", padding: 0, margin: 0 }}>
                       {s.features.map((f) => (
                         <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: "10px", fontSize: "13px", color: "rgba(230,230,240,0.9)", lineHeight: 1.5 }}>
@@ -595,26 +630,6 @@ export default function Services() {
                         </li>
                       ))}
                     </ul>
-
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "4px" }}>
-                      <span
-                        style={{
-                          fontSize: "24px",
-                          fontWeight: 700,
-                          background: "linear-gradient(135deg, #c084fc, #3b81ff)",
-                          WebkitBackgroundClip: "text",
-                          backgroundClip: "text",
-                          WebkitTextFillColor: "transparent",
-                          letterSpacing: "-0.02em",
-                        }}
-                      >
-                        {s.stat.value}
-                      </span>
-                      <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.55)", letterSpacing: "0.05em", textTransform: "uppercase" }}>
-                        {s.stat.label}
-                      </span>
-                    </div>
-
                     <a
                       href={`mailto:hello@socialpulse.media?subject=${encodeURIComponent(s.cta)}`}
                       style={{
