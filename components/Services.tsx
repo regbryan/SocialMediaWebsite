@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-type IconName = "grid" | "layers" | "play" | "briefcase";
+type IconName = "grid" | "layers" | "play" | "briefcase" | "target" | "mail" | "chat" | "spark";
 
 const Icon = ({ name, size = 20 }: { name: IconName; size?: number }) => {
   const common = {
@@ -50,6 +50,30 @@ const Icon = ({ name, size = 20 }: { name: IconName; size?: number }) => {
           <rect x="2" y="7" width="20" height="14" rx="2" />
           <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
           <path d="M2 13h20" />
+        </>
+      )}
+      {name === "target" && (
+        <>
+          <circle cx="12" cy="12" r="9" />
+          <circle cx="12" cy="12" r="5" />
+          <circle cx="12" cy="12" r="1.5" fill="url(#svc-grad)" />
+        </>
+      )}
+      {name === "mail" && (
+        <>
+          <rect x="2.5" y="5" width="19" height="14" rx="2" />
+          <path d="m3 7 9 6 9-6" />
+        </>
+      )}
+      {name === "chat" && (
+        <>
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+        </>
+      )}
+      {name === "spark" && (
+        <>
+          <path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
+          <circle cx="12" cy="12" r="3" />
         </>
       )}
     </svg>
@@ -159,14 +183,86 @@ const services: Service[] = [
     ],
     cta: "Book a Campaign",
   },
+  {
+    icon: "target",
+    title: "Paid Social Ads",
+    tagline: "Scale what works",
+    description:
+      "Meta, TikTok, and LinkedIn ads with organic-feel creative, tight targeting, and weekly optimization.",
+    image: "/portfolio/omega-tax.png",
+    stat: { value: "2.8×", label: "ROAS average" },
+    tint: "rgba(255,107,107,0.28)",
+    features: [
+      "Meta, TikTok & LinkedIn campaigns",
+      "Organic-style creative variants",
+      "Audience + lookalike targeting",
+      "Weekly budget optimization",
+      "Transparent ROAS reporting",
+    ],
+    cta: "Book Paid Ads",
+  },
+  {
+    icon: "mail",
+    title: "Email & SMS",
+    tagline: "Own your audience",
+    description:
+      "Flows, broadcasts, and lifecycle automations that turn followers into repeat buyers.",
+    image: "/portfolio/omega-credit.png",
+    stat: { value: "38%", label: "open rate" },
+    tint: "rgba(251,191,36,0.28)",
+    features: [
+      "Welcome, browse, cart, post-purchase flows",
+      "Weekly broadcast calendar",
+      "Segmented list strategy",
+      "SMS + email integration",
+      "Revenue-per-email tracking",
+    ],
+    cta: "Book Email / SMS",
+  },
+  {
+    icon: "chat",
+    title: "Community",
+    tagline: "Stay responsive",
+    description:
+      "Comment and DM management that keeps your audience engaged while you focus on the product.",
+    image: "/portfolio/scboardwalk-ride.png",
+    stat: { value: "< 1h", label: "response time" },
+    tint: "rgba(167,243,208,0.28)",
+    features: [
+      "Comment + DM response daily",
+      "Brand-voice training",
+      "Lead handoff workflow",
+      "Sentiment weekly digest",
+      "Flag-&-escalate on crises",
+    ],
+    cta: "Book Community",
+  },
+  {
+    icon: "spark",
+    title: "Strategy",
+    tagline: "Built on data",
+    description:
+      "Positioning, content pillars, and a 90-day roadmap so every post actually ladders to a goal.",
+    image: "/portfolio/iec-summer.png",
+    stat: { value: "90", label: "day plans" },
+    tint: "rgba(139,92,255,0.32)",
+    features: [
+      "Audience & voice deep-dive",
+      "Content pillar framework",
+      "Competitive audit",
+      "90-day rolling roadmap",
+      "Monthly performance review",
+    ],
+    cta: "Book Strategy",
+  },
 ];
 
 // Fixed-arc tunnel: all cards visible in a row, each rotated toward the center
 // so the whole row reads as the inside of a curved wall facing the viewer.
 // Delta is the signed distance from the middle of the array.
 function arcRotation(delta: number, hoveredIdx: number | null, myIdx: number): string {
-  // Base tilt per step. 5 cards → extremes sit at ±2 * 22 = 44deg
-  const step = 22;
+  // Base tilt per step. 9 cards → extremes sit at ±4 * 14 = 56deg
+  const step = 14;
   const base = -delta * step;
   // If user hovers a card, flatten it and gently unroll the rest
   if (hoveredIdx === myIdx) {
@@ -303,8 +399,8 @@ export default function Services() {
                 onMouseLeave={() => setHoveredIdx(null)}
                 style={{
                   flex: "0 0 auto",
-                  width: "200px",
-                  height: "360px",
+                  width: "145px",
+                  height: "310px",
                   transform,
                   transformOrigin: "center center",
                   transition: "transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)",
@@ -408,7 +504,7 @@ export default function Services() {
                   >
                     <h3
                       style={{
-                        fontSize: "26px",
+                        fontSize: "18px",
                         fontWeight: 700,
                         color: "white",
                         lineHeight: 1.15,
@@ -420,10 +516,14 @@ export default function Services() {
                     </h3>
                     <p
                       style={{
-                        fontSize: "13px",
-                        lineHeight: 1.55,
+                        fontSize: "11px",
+                        lineHeight: 1.45,
                         color: "rgba(220,220,232,0.82)",
                         margin: 0,
+                        display: "-webkit-box",
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: "vertical" as const,
+                        overflow: "hidden",
                       }}
                     >
                       {s.description}
