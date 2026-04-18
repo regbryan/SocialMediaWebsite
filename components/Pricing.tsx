@@ -84,11 +84,11 @@ function PricingCard({ plan }: { plan: Plan }) {
   return (
     <div
       className="pricing-scene"
-      style={{ perspective: "1200px", width: "100%", maxWidth: "340px" }}
+      style={{ perspective: "1200px", width: "100%", maxWidth: "300px" }}
     >
       <div
         className={`pricing-card-wrap ${flipped ? "flipped" : ""}`}
-        style={{ width: "100%", height: "480px", cursor: "pointer" }}
+        style={{ width: "100%", height: "410px", cursor: "pointer" }}
         onClick={() => setFlipped((f) => !f)}
         role="button"
         tabIndex={0}
@@ -116,7 +116,7 @@ function PricingCard({ plan }: { plan: Plan }) {
               position: "absolute",
               inset: 0,
               borderRadius: "22px",
-              padding: "30px 28px 24px",
+              padding: "24px 22px 20px",
               background: frontBg,
               border: plan.popular ? "1px solid rgba(139,92,255,0.45)" : "1px solid rgba(255,255,255,0.08)",
               boxShadow: plan.popular
@@ -172,43 +172,43 @@ function PricingCard({ plan }: { plan: Plan }) {
             {/* Title */}
             <div
               style={{
-                fontSize: "30px",
+                fontSize: "24px",
                 fontWeight: 700,
                 color: "#fff",
                 letterSpacing: "-0.02em",
-                marginBottom: "14px",
+                marginBottom: "10px",
               }}
             >
               {plan.name}
             </div>
 
             {/* Price */}
-            <div style={{ display: "flex", alignItems: "baseline", gap: "4px", marginBottom: "6px" }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "3px", marginBottom: "4px" }}>
               {plan.price.startsWith("$") ? (
                 <>
-                  <span style={{ fontSize: "18px", fontWeight: 500, color: "rgba(192,132,252,0.95)" }}>$</span>
-                  <span style={{ fontSize: "46px", fontWeight: 300, color: "#fff", lineHeight: 1 }}>
+                  <span style={{ fontSize: "15px", fontWeight: 500, color: "rgba(192,132,252,0.95)" }}>$</span>
+                  <span style={{ fontSize: "36px", fontWeight: 300, color: "#fff", lineHeight: 1 }}>
                     {plan.price.slice(1)}
                   </span>
                 </>
               ) : (
-                <span style={{ fontSize: "38px", fontWeight: 400, color: "#fff", lineHeight: 1 }}>{plan.price}</span>
+                <span style={{ fontSize: "30px", fontWeight: 400, color: "#fff", lineHeight: 1 }}>{plan.price}</span>
               )}
               {plan.period && (
-                <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.45)", fontWeight: 300 }}>{plan.period}</span>
+                <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", fontWeight: 300 }}>{plan.period}</span>
               )}
             </div>
-            <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", letterSpacing: "0.03em", marginBottom: "22px" }}>
+            <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", letterSpacing: "0.03em", marginBottom: "16px" }}>
               billed monthly · cancel anytime
             </div>
 
             {/* Divider */}
             <div
               style={{
-                width: "40px",
+                width: "34px",
                 height: "1px",
                 background: "linear-gradient(90deg, rgba(192,132,252,0.6), transparent)",
-                marginBottom: "22px",
+                marginBottom: "16px",
               }}
             />
 
@@ -217,10 +217,10 @@ function PricingCard({ plan }: { plan: Plan }) {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "10px",
-                fontSize: "13px",
+                gap: "8px",
+                fontSize: "12px",
                 color: "rgba(255,255,255,0.7)",
-                marginBottom: "20px",
+                marginBottom: "14px",
               }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(192,132,252,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -243,9 +243,10 @@ function PricingCard({ plan }: { plan: Plan }) {
                 textTransform: "uppercase",
                 color: "rgba(192,132,252,0.95)",
                 borderBottom: "1px solid rgba(192,132,252,0.25)",
-                paddingBottom: "10px",
-                marginBottom: "18px",
+                paddingBottom: "8px",
+                marginBottom: "14px",
                 width: "fit-content",
+                fontSize: "10px",
               }}
             >
               See Full Details
@@ -257,9 +258,9 @@ function PricingCard({ plan }: { plan: Plan }) {
             {/* Visual accent */}
             <div
               style={{
-                borderRadius: "14px",
+                borderRadius: "12px",
                 overflow: "hidden",
-                height: "96px",
+                height: "72px",
                 position: "relative",
                 background: "linear-gradient(180deg, rgba(139,92,255,0.22) 0%, rgba(59,129,255,0.12) 50%, rgba(0,0,0,0.2) 100%)",
                 border: "1px solid rgba(255,255,255,0.04)",
@@ -300,7 +301,7 @@ function PricingCard({ plan }: { plan: Plan }) {
               position: "absolute",
               inset: 0,
               borderRadius: "22px",
-              padding: "30px 28px 24px",
+              padding: "24px 22px 20px",
               background: backBg,
               border: plan.popular ? "1px solid rgba(139,92,255,0.45)" : "1px solid rgba(255,255,255,0.08)",
               boxShadow: "0 30px 80px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.04)",
