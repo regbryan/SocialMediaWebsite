@@ -258,24 +258,28 @@ const services: Service[] = [
 ];
 
 // Flared tunnel: center cards are SMALL and RECESSED, edges are LARGE and FORWARD.
-// This creates the wide-angle fisheye look where the center draws back and the
-// sides bulge out toward the viewer, matching the reference image.
-function arcRotation(delta: number, maxDelta: number, hoveredIdx: number | null, myIdx: number): string {
-  if (hoveredIdx === myIdx) {
+function arcRotation(
+  delta: number,
+  maxDelta: number,
+  hoveredIdx: number | null,
+  activeIdx: number | null,
+  myIdx: number
+): string {
+  // Active card flies forward out of the arc
+  if (activeIdx === myIdx) {
+    return "translateZ(340px) rotateY(0deg) scale(1.55)";
+  }
+  // Hover peeks forward (only when nothing is active)
+  if (activeIdx === null && hoveredIdx === myIdx) {
     return "rotateY(0deg) translateZ(220px) scale(1.25)";
   }
   const absD = Math.abs(delta);
-  const progress = maxDelta > 0 ? absD / maxDelta : 0; // 0 = center, 1 = edge
+  const progress = maxDelta > 0 ? absD / maxDelta : 0;
 
-  // Rotation still tilts each card inward
   const step = 16;
   const rotY = -delta * step;
-
-  // Scale: center shrinks, edges grow
-  const scale = 0.62 + progress * 0.55; // 0.62 → 1.17
-
-  // Z translation: center pushed back, edges pulled forward
-  const z = -140 + progress * 200; // -140 → +60
+  const scale = 0.62 + progress * 0.55;
+  const z = -140 + progress * 200;
 
   return `translateZ(${z}px) rotateY(${rotY}deg) scale(${scale})`;
 }
@@ -323,20 +327,20 @@ function NavButton({ dir, onClick }: { dir: "left" | "right"; onClick: () => voi
 
 export default function Services() {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
-  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
+  const [activeIdx, setActiveIdx] = useState<number | null>(null);
 
   const n = services.length;
   const center = (n - 1) / 2;
 
-  // Modal ESC close
+  // ESC clears active card
   useEffect(() => {
-    if (expandedIdx === null) return;
+    if (activeIdx === null) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setExpandedIdx(null);
+      if (e.key === "Escape") setActiveIdx(null);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [expandedIdx]);
+  }, [activeIdx]);
 
   return (
     <section
@@ -380,6 +384,7 @@ export default function Services() {
 
       {/* Fixed-arc tunnel — all cards visible, each rotated toward center */}
       <div
+        onClick={() => setActiveIdx(null)}
         style={{
           margin: "56px auto 0",
           padding: "0 clamp(16px, 3vw, 40px)",
@@ -399,28 +404,42 @@ export default function Services() {
         >
           {services.map((s, i) => {
             const delta = i - center;
-            const transform = arcRotation(delta, center, hoveredIdx, i);
+            const transform = arcRotation(delta, center, hoveredIdx, activeIdx, i);
+            const isActive = activeIdx === i;
+            const isDimmed = activeIdx !== null && !isActive;
             return (
               <article
                 key={s.title}
-                onClick={() => setExpandedIdx(i)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveIdx((prev) => (prev === i ? null : i));
+                }}
                 onMouseEnter={() => setHoveredIdx(i)}
                 onMouseLeave={() => setHoveredIdx(null)}
                 style={{
                   flex: "0 0 auto",
                   width: "145px",
                   height: "310px",
+                  marginLeft: i === 0 ? 0 : "-30px",
                   transform,
                   transformOrigin: "center center",
-                  transition: "transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)",
+                  transition:
+                    "transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, filter 0.35s ease",
                   cursor: "pointer",
                   borderRadius: "18px",
                   overflow: "hidden",
                   background: "#0f0f1a",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  boxShadow: "0 24px 60px rgba(0,0,0,0.5)",
-                  willChange: "transform",
+                  border: isActive
+                    ? "1px solid rgba(192,132,252,0.45)"
+                    : "1px solid rgba(255,255,255,0.06)",
+                  boxShadow: isActive
+                    ? "0 40px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(192,132,252,0.25), 0 0 60px rgba(139,92,255,0.3)"
+                    : "0 24px 60px rgba(0,0,0,0.5)",
+                  opacity: isDimmed ? 0.28 : 1,
+                  filter: isDimmed ? "blur(1px)" : "none",
+                  willChange: "transform, opacity",
                   position: "relative",
+                  zIndex: isActive ? 200 : 100 - Math.abs(delta),
                 }}
               >
                   {/* Background image */}
@@ -449,54 +468,6 @@ export default function Services() {
                       zIndex: 2,
                     }}
                   />
-
-                  {/* Top chips */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "14px",
-                      left: "14px",
-                      right: "14px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      zIndex: 4,
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "36px",
-                        height: "36px",
-                        borderRadius: "10px",
-                        background: "rgba(10,10,18,0.6)",
-                        backdropFilter: "blur(10px)",
-                        WebkitBackdropFilter: "blur(10px)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Icon name={s.icon} />
-                    </div>
-                    <span
-                      style={{
-                        fontSize: "10px",
-                        fontWeight: 600,
-                        letterSpacing: "0.15em",
-                        textTransform: "uppercase",
-                        color: "rgba(255,255,255,0.75)",
-                        background: "rgba(10,10,18,0.55)",
-                        backdropFilter: "blur(10px)",
-                        WebkitBackdropFilter: "blur(10px)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        padding: "6px 10px",
-                        borderRadius: "999px",
-                      }}
-                    >
-                      {s.tagline}
-                    </span>
-                  </div>
 
                   {/* Bottom content */}
                   <div
@@ -569,121 +540,172 @@ export default function Services() {
         </div>
       </div>
 
-      {/* Detail modal (reused) */}
-      {expandedIdx !== null && (
-        <div
-          onClick={() => setExpandedIdx(null)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 100,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "24px",
-            cursor: "zoom-out",
-            background: "rgba(5,5,12,0.88)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-          }}
-        >
+      {/* Inline details panel — slides in below the arc when a card is active */}
+      <div
+        style={{
+          maxWidth: "680px",
+          margin: "0 auto",
+          padding: "0 clamp(24px, 5vw, 40px)",
+          overflow: "hidden",
+          maxHeight: activeIdx !== null ? "600px" : "0px",
+          opacity: activeIdx !== null ? 1 : 0,
+          transition: "max-height 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease",
+        }}
+      >
+        {activeIdx !== null && (
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              position: "relative",
-              width: "min(460px, 100%)",
-              maxHeight: "min(90vh, 720px)",
-              background: "#0f0f1a",
-              borderRadius: "22px",
-              overflow: "hidden",
-              border: "1px solid rgba(255,255,255,0.08)",
-              boxShadow: "0 30px 80px rgba(0,0,0,0.7)",
-              cursor: "default",
+              background: "rgba(15,15,26,0.72)",
+              border: "1px solid rgba(192,132,252,0.25)",
+              borderRadius: "20px",
+              padding: "28px 32px",
+              marginTop: "32px",
+              backdropFilter: "blur(14px)",
+              WebkitBackdropFilter: "blur(14px)",
+              boxShadow: "0 24px 70px rgba(0,0,0,0.55), 0 0 40px rgba(139,92,255,0.12)",
               display: "flex",
               flexDirection: "column",
+              gap: "18px",
+              animation: "svc-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both",
             }}
           >
-            {(() => {
-              const s = services[expandedIdx];
-              return (
-                <>
-                  <div style={{ position: "relative", width: "100%", height: "240px", flexShrink: 0 }}>
-                    <Image src={s.image} alt={s.title} fill sizes="460px" style={{ objectFit: "cover" }} priority />
-                    <div style={{ position: "absolute", inset: 0, background: `radial-gradient(ellipse at 25% 20%, ${s.tint} 0%, transparent 55%)`, mixBlendMode: "screen" }} />
-                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 0%, rgba(15,15,26,0.9) 100%)" }} />
-                    <button
-                      aria-label="Close"
-                      onClick={() => setExpandedIdx(null)}
-                      style={{
-                        position: "absolute",
-                        top: "14px",
-                        right: "14px",
-                        width: "32px",
-                        height: "32px",
-                        borderRadius: "999px",
-                        background: "rgba(10,10,18,0.7)",
-                        border: "1px solid rgba(255,255,255,0.12)",
-                        color: "white",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
-                    </button>
-                    <div style={{ position: "absolute", bottom: "18px", left: "20px", right: "20px", display: "flex", alignItems: "center", gap: "12px" }}>
-                      <div style={{ width: "42px", height: "42px", borderRadius: "11px", background: "rgba(10,10,18,0.6)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <Icon name={s.icon} size={22} />
-                      </div>
-                      <div>
-                        <h3 style={{ fontSize: "22px", fontWeight: 700, color: "white", margin: 0, letterSpacing: "-0.02em" }}>{s.title}</h3>
-                        <span style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(192,132,252,0.95)" }}>{s.tagline}</span>
-                      </div>
-                    </div>
-                  </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <div
+                style={{
+                  width: "44px",
+                  height: "44px",
+                  borderRadius: "12px",
+                  background: "rgba(10,10,18,0.6)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Icon name={services[activeIdx].icon} size={22} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3
+                  style={{
+                    fontSize: "22px",
+                    fontWeight: 700,
+                    color: "white",
+                    margin: 0,
+                    letterSpacing: "-0.02em",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {services[activeIdx].title}
+                </h3>
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                    color: "rgba(192,132,252,0.95)",
+                  }}
+                >
+                  {services[activeIdx].tagline}
+                </span>
+              </div>
+              <button
+                aria-label="Close"
+                onClick={() => setActiveIdx(null)}
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "999px",
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  color: "rgba(255,255,255,0.75)",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
 
-                  <div style={{ padding: "22px 24px 24px", overflow: "auto", display: "flex", flexDirection: "column", gap: "16px" }}>
-                    <p style={{ fontSize: "14px", lineHeight: 1.6, color: "rgba(220,220,232,0.88)", margin: 0 }}>{s.description}</p>
-                    <ul style={{ display: "flex", flexDirection: "column", gap: "8px", listStyle: "none", padding: 0, margin: 0 }}>
-                      {s.features.map((f) => (
-                        <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: "10px", fontSize: "13px", color: "rgba(230,230,240,0.9)", lineHeight: 1.5 }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="url(#svc-grad)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: "3px", flexShrink: 0 }}>
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-                    <a
-                      href={`mailto:hello@socialpulse.media?subject=${encodeURIComponent(s.cta)}`}
-                      style={{
-                        display: "block",
-                        textAlign: "center",
-                        padding: "13px 20px",
-                        marginTop: "6px",
-                        borderRadius: "11px",
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        letterSpacing: "0.02em",
-                        textDecoration: "none",
-                        background: "linear-gradient(135deg, #8b5cff 0%, #3b81ff 100%)",
-                        color: "white",
-                        boxShadow: "0 8px 24px rgba(139,92,255,0.35)",
-                      }}
-                    >
-                      {s.cta}
-                    </a>
-                  </div>
-                </>
-              );
-            })()}
+            <p style={{ fontSize: "14px", lineHeight: 1.6, color: "rgba(220,220,232,0.88)", margin: 0 }}>
+              {services[activeIdx].description}
+            </p>
+
+            <ul style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "8px 16px", listStyle: "none", padding: 0, margin: 0 }}>
+              {services[activeIdx].features.map((f) => (
+                <li
+                  key={f}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "8px",
+                    fontSize: "13px",
+                    color: "rgba(230,230,240,0.92)",
+                    lineHeight: 1.45,
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="url(#svc-grad)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: "3px", flexShrink: 0 }}>
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "16px", justifyContent: "space-between", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+                <span
+                  style={{
+                    fontSize: "26px",
+                    fontWeight: 700,
+                    background: "linear-gradient(135deg, #c084fc, #3b81ff)",
+                    WebkitBackgroundClip: "text",
+                    backgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    letterSpacing: "-0.02em",
+                  }}
+                >
+                  {services[activeIdx].stat.value}
+                </span>
+                <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  {services[activeIdx].stat.label}
+                </span>
+              </div>
+              <a
+                href={`mailto:hello@socialpulse.media?subject=${encodeURIComponent(services[activeIdx].cta)}`}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  padding: "11px 20px",
+                  borderRadius: "10px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  letterSpacing: "0.02em",
+                  textDecoration: "none",
+                  background: "linear-gradient(135deg, #8b5cff 0%, #3b81ff 100%)",
+                  color: "white",
+                  boxShadow: "0 8px 24px rgba(139,92,255,0.35)",
+                }}
+              >
+                {services[activeIdx].cta} →
+              </a>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
+      <style>{`
+        @keyframes svc-fade-up {
+          from { opacity: 0; transform: translateY(14px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </section>
   );
 }
