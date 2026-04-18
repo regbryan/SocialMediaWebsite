@@ -135,8 +135,15 @@ export default function ParticleMorph({
     }
 
     const morphTo = (targets: Pt[]) => {
+      if (targets.length === 0) return;
+      // Stride-sample so particles distribute across ALL targets, not just
+      // the first N (which previously caused the word to only fill its top
+      // row when there were ~10k targets but only 1800 particles).
+      const stride = targets.length / particles.length;
       for (let i = 0; i < particles.length; i++) {
-        const t = targets[i % targets.length];
+        // Add a small jitter so particles don't align on exact integer strides
+        const idx = Math.floor(i * stride + Math.random() * stride);
+        const t = targets[idx % targets.length];
         particles[i].tx = t.x;
         particles[i].ty = t.y;
       }
