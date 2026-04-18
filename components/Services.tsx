@@ -262,25 +262,14 @@ const services: Service[] = [
 // Hover/active: flatten + scale to 1.1 + translateZ 50 + full brightness.
 // Rotation lookup per |delta| (signed by side):
 //   0→0°, 1→15°, 2→30°, 3→40°, 4→50°
-function arcRotation(
-  delta: number,
-  _maxDelta: number,
-  hoveredIdx: number | null,
-  activeIdx: number | null,
-  myIdx: number
-): string {
+function arcRotation(delta: number, focused: boolean): string {
+  if (focused) {
+    return "rotateY(0deg) scale(1.1) translateZ(50px)";
+  }
   const rotationByAbs = [0, 15, 30, 40, 50];
   const absD = Math.min(Math.abs(delta), rotationByAbs.length - 1);
   const magnitude = rotationByAbs[absD];
-  // Left (delta<0) tilts +deg so right edge comes forward toward center viewer;
-  // right (delta>0) tilts -deg so left edge comes forward. Concave arc facing you.
   const rotY = delta < 0 ? magnitude : -magnitude;
-
-  // Active or hover: flatten + modest forward pop
-  if (activeIdx === myIdx || (activeIdx === null && hoveredIdx === myIdx)) {
-    return "rotateY(0deg) scale(1.1) translateZ(50px)";
-  }
-
   return `rotateY(${rotY}deg) scale(0.85)`;
 }
 
@@ -328,9 +317,23 @@ function NavButton({ dir, onClick }: { dir: "left" | "right"; onClick: () => voi
 export default function Services() {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
+  // Auto-cycling "focus" — advances every 3s when not paused
+  const [autoIdx, setAutoIdx] = useState<number>(Math.floor(services.length / 2));
 
   const n = services.length;
   const center = (n - 1) / 2;
+
+  // Effective focus: explicit click > hover > auto-cycle
+  const focusedIdx = activeIdx ?? hoveredIdx ?? autoIdx;
+
+  // Auto-advance focus every 3s, pause on hover or when a card is clicked
+  useEffect(() => {
+    if (hoveredIdx !== null || activeIdx !== null) return;
+    const id = setInterval(() => {
+      setAutoIdx((i) => (i + 1) % n);
+    }, 3000);
+    return () => clearInterval(id);
+  }, [hoveredIdx, activeIdx, n]);
 
   // ESC clears active card
   useEffect(() => {
@@ -387,7 +390,7 @@ export default function Services() {
         style={{
           margin: "56px auto 0",
           padding: "0 clamp(16px, 3vw, 40px)",
-          perspective: "1100px",
+          perspective: "600px",
           perspectiveOrigin: "50% 50%",
         }}
       >
@@ -396,7 +399,7 @@ export default function Services() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            gap: "10px",
+            gap: "0px",
             transformStyle: "preserve-3d",
             minHeight: "460px",
             pointerEvents: "none",
@@ -404,7 +407,8 @@ export default function Services() {
         >
           {services.map((s, i) => {
             const delta = i - center;
-            const transform = arcRotation(delta, center, hoveredIdx, activeIdx, i);
+            const isFocused = focusedIdx === i;
+            const transform = arcRotation(delta, isFocused);
             const isActive = activeIdx === i;
             const isDimmed = activeIdx !== null && !isActive;
             return (
@@ -418,8 +422,8 @@ export default function Services() {
                 onMouseLeave={() => setHoveredIdx(null)}
                 style={{
                   flex: "0 0 auto",
-                  width: "140px",
-                  height: "240px",
+                  width: "130px",
+                  height: "220px",
                   pointerEvents: "auto",
                   transform,
                   transformOrigin: "center center",
@@ -435,13 +439,12 @@ export default function Services() {
                   boxShadow: isActive
                     ? "0 20px 50px rgba(0,0,0,0.8), 0 0 40px rgba(139,92,255,0.25)"
                     : "0 10px 30px rgba(0,0,0,0.5)",
-                  // Bow-curve pattern: dim by default, full brightness when
-                  // active or hovered, slightly more dim when something else is active
-                  filter: isActive
+                  // Dim by default, full brightness when focused (active / hover / auto-cycle)
+                  filter: isFocused
                     ? "brightness(1)"
                     : isDimmed
-                    ? "brightness(0.35)"
-                    : "brightness(0.6)",
+                    ? "brightness(0.3)"
+                    : "brightness(0.55)",
                   willChange: "transform, filter",
                   position: "relative",
                   zIndex: isActive ? 200 : 100 - Math.abs(delta),
@@ -463,82 +466,8 @@ export default function Services() {
                     }}
                   />
 
-                  {/* Bottom scrim */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      background:
-                        "linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.3) 35%, rgba(9,9,18,0.93) 80%, #090912 100%)",
-                      zIndex: 2,
-                    }}
-                  />
-
-                  {/* Bottom content */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: "22px",
-                      right: "22px",
-                      bottom: "22px",
-                      zIndex: 4,
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "10px",
-                    }}
-                  >
-                    <h3
-                      style={{
-                        fontSize: "18px",
-                        fontWeight: 700,
-                        color: "white",
-                        lineHeight: 1.15,
-                        letterSpacing: "-0.02em",
-                        margin: 0,
-                      }}
-                    >
-                      {s.title}
-                    </h3>
-                    <p
-                      style={{
-                        fontSize: "11px",
-                        lineHeight: 1.45,
-                        color: "rgba(220,220,232,0.82)",
-                        margin: 0,
-                        display: "-webkit-box",
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: "vertical" as const,
-                        overflow: "hidden",
-                      }}
-                    >
-                      {s.description}
-                    </p>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "4px" }}>
-                      <span
-                        style={{
-                          fontSize: "20px",
-                          fontWeight: 700,
-                          background: "linear-gradient(135deg, #c084fc, #3b81ff)",
-                          WebkitBackgroundClip: "text",
-                          backgroundClip: "text",
-                          WebkitTextFillColor: "transparent",
-                          letterSpacing: "-0.01em",
-                        }}
-                      >
-                        {s.stat.value}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: "11px",
-                          color: "rgba(255,255,255,0.55)",
-                          letterSpacing: "0.05em",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        {s.stat.label}
-                      </span>
-                    </div>
-                  </div>
+                  {/* Text removed — image-only cards. All text content lives in
+                      the details panel that opens on click. */}
                 </article>
               );
             })}
