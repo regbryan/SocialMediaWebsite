@@ -77,13 +77,20 @@ export default function ParticleMorph({
       samplerCtx.strokeStyle = "white";
       samplerCtx.lineWidth = 6;
       samplerCtx.lineJoin = "round";
-      // 0.72 coefficient fits heavy 900-weight fonts without overflowing width
-      const fontSize = Math.min(width / (text.length * 0.72), height * 0.78);
+      // 0.72 width-coefficient + 0.55 height-coefficient leaves enough
+      // vertical margin for ascenders/descenders so letters aren't clipped.
+      const fontSize = Math.min(width / (text.length * 0.72), height * 0.55);
       samplerCtx.font = `900 ${fontSize}px system-ui, -apple-system, "Segoe UI", sans-serif`;
       samplerCtx.textAlign = "center";
-      samplerCtx.textBaseline = "middle";
-      samplerCtx.strokeText(text, width / 2, height / 2);
-      samplerCtx.fillText(text, width / 2, height / 2);
+      // Use alphabetic + measureTextMetrics-derived offset for reliable vertical centering
+      samplerCtx.textBaseline = "alphabetic";
+      const metrics = samplerCtx.measureText(text);
+      const ascent = metrics.actualBoundingBoxAscent || fontSize * 0.72;
+      const descent = metrics.actualBoundingBoxDescent || fontSize * 0.2;
+      const visualCenterOffset = (ascent - descent) / 2;
+      const y = height / 2 + visualCenterOffset;
+      samplerCtx.strokeText(text, width / 2, y);
+      samplerCtx.fillText(text, width / 2, y);
 
       const data = samplerCtx.getImageData(0, 0, width, height).data;
       const pts: Pt[] = [];

@@ -58,7 +58,7 @@ export default function HeroVideo() {
             filter: "drop-shadow(0 4px 30px rgba(236, 72, 153, 0.28))",
           }}
         >
-          <ParticleMorph words={words} width={560} height={200} particleCount={500} />
+          <ParticleMorph words={words} width={600} height={300} particleCount={1800} />
         </div>
 
         <div
