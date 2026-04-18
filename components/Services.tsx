@@ -261,7 +261,7 @@ export default function Services() {
 
             let transform: string;
             if (isExpanded) {
-              transform = "translate(0, 0) rotate(0deg) scale(1.4)";
+              transform = "translate(0, 0) rotate(0deg) scale(1.1)";
             } else if (hovered) {
               transform = fannedTransforms[stackPos] || stackedTransforms[stackPos];
             } else {
@@ -403,7 +403,7 @@ export default function Services() {
                 >
                   <h3
                     style={{
-                      fontSize: isExpanded ? "20px" : "26px",
+                      fontSize: isExpanded ? "22px" : "26px",
                       fontWeight: 700,
                       color: "white",
                       lineHeight: 1.15,
@@ -416,13 +416,11 @@ export default function Services() {
                   </h3>
                   <p
                     style={{
-                      fontSize: isExpanded ? "10px" : "13px",
+                      fontSize: isExpanded ? "12px" : "13px",
                       lineHeight: 1.55,
                       color: "rgba(220,220,232,0.82)",
                       margin: 0,
                       transition: "font-size 0.4s",
-                      maxHeight: isExpanded ? "60px" : "none",
-                      overflow: "hidden",
                     }}
                   >
                     {s.description}
@@ -446,13 +444,13 @@ export default function Services() {
                         style={{
                           display: "flex",
                           alignItems: "flex-start",
-                          gap: "5px",
-                          fontSize: "9px",
+                          gap: "7px",
+                          fontSize: "11px",
                           color: "rgba(230,230,240,0.85)",
-                          lineHeight: 1.4,
+                          lineHeight: 1.45,
                         }}
                       >
-                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="url(#svc-grad)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: "2px", flexShrink: 0 }}>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="url(#svc-grad)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: "2px", flexShrink: 0 }}>
                           <polyline points="20 6 9 17 4 12" />
                         </svg>
                         {f}
@@ -503,9 +501,9 @@ export default function Services() {
                     style={{
                       display: "block",
                       textAlign: "center",
-                      padding: "7px 14px",
-                      borderRadius: "7px",
-                      fontSize: "10px",
+                      padding: "10px 16px",
+                      borderRadius: "9px",
+                      fontSize: "12px",
                       fontWeight: 600,
                       letterSpacing: "0.02em",
                       textDecoration: "none",
