@@ -265,21 +265,20 @@ function arcRotation(
   activeIdx: number | null,
   myIdx: number
 ): string {
-  // Active card flies forward out of the arc (gentler — doesn't cover the header)
-  if (activeIdx === myIdx) {
-    return "translateZ(140px) rotateY(0deg) scale(1.15)";
-  }
-  // Hover peeks forward (only when nothing is active)
-  if (activeIdx === null && hoveredIdx === myIdx) {
-    return "rotateY(0deg) translateZ(220px) scale(1.25)";
-  }
+  // Every card keeps its arc position — active state is indicated by glow
+  // (applied in card style), not by changing transform. This way the active
+  // card never covers its neighbors and all cards remain clickable.
   const absD = Math.abs(delta);
   const progress = maxDelta > 0 ? absD / maxDelta : 0;
-
   const step = 16;
   const rotY = -delta * step;
   const scale = 0.62 + progress * 0.55;
   const z = -140 + progress * 200;
+
+  // Only hover lifts forward (and only when nothing is active)
+  if (activeIdx === null && hoveredIdx === myIdx) {
+    return `translateZ(${z + 120}px) rotateY(0deg) scale(${scale + 0.18})`;
+  }
 
   return `translateZ(${z}px) rotateY(${rotY}deg) scale(${scale})`;
 }
@@ -399,6 +398,7 @@ export default function Services() {
             gap: 0,
             transformStyle: "preserve-3d",
             minHeight: "460px",
+            pointerEvents: "none",
           }}
         >
           {services.map((s, i) => {
@@ -419,7 +419,7 @@ export default function Services() {
                   flex: "0 0 auto",
                   width: "145px",
                   height: "310px",
-                  marginLeft: i === 0 ? 0 : "-30px",
+                  pointerEvents: "auto",
                   transform,
                   transformOrigin: "center center",
                   transition:
