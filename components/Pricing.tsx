@@ -260,7 +260,7 @@ function PricingCard({ plan, position }: { plan: Plan; position: number }) {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "8px",
-                fontSize: "11px",
+                fontSize: "10px",
                 fontWeight: 600,
                 letterSpacing: "0.15em",
                 textTransform: "uppercase",
@@ -269,7 +269,6 @@ function PricingCard({ plan, position }: { plan: Plan; position: number }) {
                 paddingBottom: "8px",
                 marginBottom: "14px",
                 width: "fit-content",
-                fontSize: "10px",
               }}
             >
               See Full Details
