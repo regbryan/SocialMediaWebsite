@@ -1,17 +1,18 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import * as THREE from "three";
 
 /**
- * DOM-based particle morph using CSS transforms.
+ * GPU-accelerated particle morph using Three.js.
  *
- * Full sequence per cycle:
- *   1. HEART holds (stable shape)
- *   2. WIND STREAK — particles kick horizontally, heavy motion blur
- *   3. TEXT — decelerate + spring into letter positions
- *   4. TEXT holds
- *   5. BALL SWEEP — compact cluster sweeps left→right, "eating" the text
- *   6. BALL reforms into HEART (loop)
+ * Two position attributes per particle (A and B). A single uniform `uProgress`
+ * interpolates 0→1 between them. During mid-transition, Simplex-noise offset
+ * plus horizontal random velocity creates the "wind streak / flowing ball"
+ * motion visible in the reference video.
+ *
+ * Cycle: heart → word[0] → heart → word[1] → heart → word[2] ...
+ * On each phase flip, positionB becomes positionA and next target loads into B.
  */
 
 type Props = {
@@ -22,17 +23,6 @@ type Props = {
 };
 
 type Pt = { x: number; y: number };
-type Particle = {
-  el: HTMLDivElement;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  tx: number;
-  ty: number;
-  captured: boolean; // true when the sweep ball has eaten this particle
-  phase: number;
-};
 
 function samplePointsFromDraw(
   w: number,
@@ -57,10 +47,10 @@ function samplePointsFromDraw(
 }
 
 function heartPoints(w: number, h: number): Pt[] {
-  return samplePointsFromDraw(w, h, 4, (c) => {
+  return samplePointsFromDraw(w, h, 3, (c) => {
     const cx = w / 2;
     const cy = h / 2 + 10;
-    const s = Math.min(w, h) * 0.38;
+    const s = Math.min(w, h) * 0.4;
     c.fillStyle = "white";
     c.beginPath();
     c.moveTo(cx, cy + s * 0.35);
@@ -72,12 +62,12 @@ function heartPoints(w: number, h: number): Pt[] {
 }
 
 function textPoints(w: number, h: number, text: string): Pt[] {
-  return samplePointsFromDraw(w, h, 4, (c) => {
+  return samplePointsFromDraw(w, h, 3, (c) => {
     c.fillStyle = "white";
     c.strokeStyle = "white";
-    c.lineWidth = 6;
+    c.lineWidth = 7;
     c.lineJoin = "round";
-    const fontSize = Math.min(w / (text.length * 0.58), h * 0.78);
+    const fontSize = Math.min(w / (text.length * 0.58), h * 0.82);
     c.font = `900 ${fontSize}px system-ui, -apple-system, "Segoe UI", sans-serif`;
     c.textAlign = "center";
     c.textBaseline = "middle";
@@ -90,7 +80,7 @@ function resampleTo(pts: Pt[], n: number): Pt[] {
   if (pts.length === 0) return new Array(n).fill({ x: 0, y: 0 });
   const out = new Array(n);
   for (let i = 0; i < n; i++) out[i] = pts[Math.floor((i / n) * pts.length)];
-  // Light shuffle so particle identity isn't correlated with x
+  // Shuffle so neighboring particles don't share clustered targets
   for (let i = out.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [out[i], out[j]] = [out[j], out[i]];
@@ -98,237 +88,273 @@ function resampleTo(pts: Pt[], n: number): Pt[] {
   return out;
 }
 
-// Phase durations (ms) — cycle totals to ~7s per word
-const T = {
-  heartHold: 1600,
-  toStreak: 250,
-  streakToText: 950,
-  textHold: 1500,
-  ballSweep: 1700,
-  ballToHeart: 900,
-};
+const vertexShader = /* glsl */ `
+  attribute vec3 positionA;
+  attribute vec3 positionB;
+  attribute float aRandom;
+  attribute float aRandom2;
 
-type Phase = "heartHold" | "toStreak" | "streakToText" | "textHold" | "ballSweep" | "ballToHeart";
+  uniform float uProgress;
+  uniform float uTime;
+  uniform float uSize;
+  uniform float uPixelRatio;
+
+  varying float vMid;
+
+  // Simplex noise (Ashima Arts, MIT license)
+  vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+  vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+  vec4 permute(vec4 x) { return mod289(((x * 34.0) + 1.0) * x); }
+  vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+
+  float snoise(vec3 v) {
+    const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+    const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+    vec3 i = floor(v + dot(v, C.yyy));
+    vec3 x0 = v - i + dot(i, C.xxx);
+    vec3 g = step(x0.yzx, x0.xyz);
+    vec3 l = 1.0 - g;
+    vec3 i1 = min(g.xyz, l.zxy);
+    vec3 i2 = max(g.xyz, l.zxy);
+    vec3 x1 = x0 - i1 + C.xxx;
+    vec3 x2 = x0 - i2 + C.yyy;
+    vec3 x3 = x0 - D.yyy;
+    i = mod289(i);
+    vec4 p = permute(permute(permute(
+      i.z + vec4(0.0, i1.z, i2.z, 1.0)) +
+      i.y + vec4(0.0, i1.y, i2.y, 1.0)) +
+      i.x + vec4(0.0, i1.x, i2.x, 1.0));
+    float n_ = 0.142857142857;
+    vec3 ns = n_ * D.wyz - D.xzx;
+    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+    vec4 x_ = floor(j * ns.z);
+    vec4 y_ = floor(j - 7.0 * x_);
+    vec4 x = x_ * ns.x + ns.yyyy;
+    vec4 y = y_ * ns.x + ns.yyyy;
+    vec4 h = 1.0 - abs(x) - abs(y);
+    vec4 b0 = vec4(x.xy, y.xy);
+    vec4 b1 = vec4(x.zw, y.zw);
+    vec4 s0 = floor(b0) * 2.0 + 1.0;
+    vec4 s1 = floor(b1) * 2.0 + 1.0;
+    vec4 sh = -step(h, vec4(0.0));
+    vec4 a0 = b0.xzyw + s0.xzyw * sh.xxyy;
+    vec4 a1 = b1.xzyw + s1.xzyw * sh.zzww;
+    vec3 p0 = vec3(a0.xy, h.x);
+    vec3 p1 = vec3(a0.zw, h.y);
+    vec3 p2 = vec3(a1.xy, h.z);
+    vec3 p3 = vec3(a1.zw, h.w);
+    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+    p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+    vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+    m = m * m;
+    return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+  }
+
+  void main() {
+    // Stagger particle timing so they don't all morph in lock-step
+    float stagger = aRandom * 0.35;
+    float t = clamp((uProgress - stagger) / (1.0 - stagger), 0.0, 1.0);
+    // Ease-in-out cubic
+    float progress = t < 0.5
+      ? 4.0 * t * t * t
+      : 1.0 - pow(-2.0 * t + 2.0, 3.0) / 2.0;
+
+    vec3 pos = mix(positionA, positionB, progress);
+
+    // Mid-transition bump: 0 at endpoints, 1 at middle — drives flow and streak
+    float mid = 4.0 * progress * (1.0 - progress);
+
+    // Curl noise for organic turbulent flow
+    float noiseScale = 0.008;
+    float noiseSpeed = uTime * 0.5;
+    vec3 noise = vec3(
+      snoise(vec3(pos.xy * noiseScale, noiseSpeed)),
+      snoise(vec3(pos.xy * noiseScale + 100.0, noiseSpeed)),
+      0.0
+    );
+    pos += noise * mid * 40.0;
+
+    // Horizontal streak bias — every particle picks a slight direction from aRandom2
+    pos.x += (aRandom2 - 0.5) * 140.0 * mid;
+
+    vMid = mid;
+
+    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+    gl_Position = projectionMatrix * mvPosition;
+    gl_PointSize = uSize * uPixelRatio * (1.0 + mid * 1.2);
+  }
+`;
+
+const fragmentShader = /* glsl */ `
+  varying float vMid;
+
+  void main() {
+    // Soft round point
+    vec2 uv = gl_PointCoord - 0.5;
+    float dist = length(uv);
+    float alpha = smoothstep(0.5, 0.05, dist);
+
+    // Pink → hot magenta, brightens during motion
+    vec3 cBase = vec3(1.0, 0.18, 0.46);   // #ff2e75
+    vec3 cFast = vec3(1.0, 0.55, 0.85);   // pink highlight
+    vec3 color = mix(cBase, cFast, vMid);
+
+    gl_FragColor = vec4(color, alpha * (0.82 + vMid * 0.18));
+  }
+`;
 
 export default function ParticleMorph({
   words,
   width = 560,
   height = 200,
-  particleCount = 500,
+  particleCount = 2500,
 }: Props) {
-  const wrapRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const wrap = wrapRef.current;
-    if (!wrap) return;
+    const container = containerRef.current;
+    if (!container) return;
 
-    // --- Build shape targets ---
-    const heart = resampleTo(heartPoints(width, height), particleCount);
-    const texts = words.map((w) => resampleTo(textPoints(width, height, w), particleCount));
+    // Sample every target shape
+    const N = particleCount;
+    const heart = resampleTo(heartPoints(width, height), N);
+    const wordTargets = words.map((w) => resampleTo(textPoints(width, height, w), N));
 
-    // --- Create particle elements ---
-    const particles: Particle[] = [];
-    for (let i = 0; i < particleCount; i++) {
-      const el = document.createElement("div");
-      el.className = "pm-particle";
-      wrap.appendChild(el);
-      const start = heart[i];
-      particles.push({
-        el,
-        x: start.x,
-        y: start.y,
-        vx: 0,
-        vy: 0,
-        tx: start.x,
-        ty: start.y,
-        captured: false,
-        phase: Math.random() * Math.PI * 2,
-      });
+    // Build "sequence" — alternate heart ↔ word
+    const sequence: Pt[][] = [];
+    for (let i = 0; i < words.length; i++) {
+      sequence.push(heart);
+      sequence.push(wordTargets[i]);
     }
 
-    // --- State machine ---
-    let wordIdx = 0;
-    let phase: Phase = "heartHold";
-    let phaseStart = performance.now();
-    // Ball sweep state
-    let ballX = -40;
-    let ballY = height / 2;
+    // --- Three.js setup ---
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(
+      -width / 2,
+      width / 2,
+      height / 2,
+      -height / 2,
+      0.1,
+      100
+    );
+    camera.position.z = 10;
 
-    const setTargetsFromArray = (arr: Pt[]) => {
-      for (let i = 0; i < particles.length; i++) {
-        particles[i].tx = arr[i].x;
-        particles[i].ty = arr[i].y;
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const dpr = Math.min(window.devicePixelRatio, 2);
+    renderer.setPixelRatio(dpr);
+    renderer.setSize(width, height);
+    renderer.setClearColor(0x000000, 0);
+    renderer.domElement.style.display = "block";
+    container.appendChild(renderer.domElement);
+
+    // Geometry with dual position attributes
+    const geometry = new THREE.BufferGeometry();
+    const posA = new Float32Array(N * 3);
+    const posB = new Float32Array(N * 3);
+    const rand = new Float32Array(N);
+    const rand2 = new Float32Array(N);
+
+    const writePos = (arr: Float32Array, pts: Pt[]) => {
+      for (let i = 0; i < N; i++) {
+        arr[i * 3] = pts[i].x - width / 2;
+        arr[i * 3 + 1] = height / 2 - pts[i].y;
+        arr[i * 3 + 2] = 0;
       }
     };
 
-    const kickStreak = () => {
-      // All particles get a strong rightward velocity + small vertical jitter
-      for (const p of particles) {
-        p.vx = 18 + Math.random() * 10;
-        p.vy = (Math.random() - 0.5) * 3;
-      }
+    writePos(posA, sequence[0]);
+    writePos(posB, sequence[1]);
+    for (let i = 0; i < N; i++) {
+      rand[i] = Math.random();
+      rand2[i] = Math.random();
+    }
+
+    geometry.setAttribute("position", new THREE.BufferAttribute(posA.slice(), 3));
+    geometry.setAttribute("positionA", new THREE.BufferAttribute(posA, 3));
+    geometry.setAttribute("positionB", new THREE.BufferAttribute(posB, 3));
+    geometry.setAttribute("aRandom", new THREE.BufferAttribute(rand, 1));
+    geometry.setAttribute("aRandom2", new THREE.BufferAttribute(rand2, 1));
+
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        uProgress: { value: 0 },
+        uTime: { value: 0 },
+        uSize: { value: 5.0 },
+        uPixelRatio: { value: dpr },
+      },
+      vertexShader,
+      fragmentShader,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      transparent: true,
+    });
+
+    const points = new THREE.Points(geometry, material);
+    scene.add(points);
+
+    // --- State machine ---
+    const HOLD_MS = 1600;
+    const MORPH_MS = 1400;
+    let lastSwitch = performance.now();
+    let seqIdx = 0; // index of A in sequence; B is next
+    const start = performance.now();
+
+    const swapAndAdvance = () => {
+      // positionB becomes positionA
+      const aAttr = geometry.attributes.positionA as THREE.BufferAttribute;
+      const bAttr = geometry.attributes.positionB as THREE.BufferAttribute;
+      (aAttr.array as Float32Array).set(bAttr.array as Float32Array);
+      aAttr.needsUpdate = true;
+
+      // Load next target into positionB
+      seqIdx = (seqIdx + 1) % sequence.length;
+      const nextTarget = sequence[(seqIdx + 1) % sequence.length];
+      writePos(bAttr.array as Float32Array, nextTarget);
+      bAttr.needsUpdate = true;
     };
 
     let rafId = 0;
-    const loop = (now: number) => {
-      const elapsed = now - phaseStart;
-      const target = T[phase];
+    const loop = () => {
+      const now = performance.now();
+      const elapsed = now - lastSwitch;
 
-      // --- Phase transitions ---
-      if (elapsed >= target) {
-        phaseStart = now;
-        if (phase === "heartHold") {
-          phase = "toStreak";
-          kickStreak();
-        } else if (phase === "toStreak") {
-          phase = "streakToText";
-          setTargetsFromArray(texts[wordIdx]);
-        } else if (phase === "streakToText") {
-          phase = "textHold";
-        } else if (phase === "textHold") {
-          phase = "ballSweep";
-          ballX = -60;
-          ballY = height / 2;
-          for (const p of particles) p.captured = false;
-        } else if (phase === "ballSweep") {
-          phase = "ballToHeart";
-          setTargetsFromArray(heart);
-          for (const p of particles) p.captured = false;
-        } else {
-          phase = "heartHold";
-          wordIdx = (wordIdx + 1) % words.length;
-        }
+      if (elapsed < HOLD_MS) {
+        material.uniforms.uProgress.value = 0;
+      } else if (elapsed < HOLD_MS + MORPH_MS) {
+        material.uniforms.uProgress.value = (elapsed - HOLD_MS) / MORPH_MS;
+      } else {
+        swapAndAdvance();
+        material.uniforms.uProgress.value = 0;
+        lastSwitch = now;
       }
 
-      // --- Per-frame updates ---
-      let filterStr = "";
-      if (phase === "toStreak") {
-        // Free-flight with blur trail
-        const t = elapsed / T.toStreak;
-        filterStr = `blur(${3 + t * 5}px)`;
-        for (const p of particles) {
-          p.x += p.vx;
-          p.y += p.vy;
-          p.vy *= 0.97;
-        }
-      } else if (phase === "streakToText") {
-        const t = elapsed / T.streakToText;
-        filterStr = `blur(${Math.max(0, 6 - t * 8)}px)`;
-        for (const p of particles) {
-          const ax = (p.tx - p.x) * 0.055;
-          const ay = (p.ty - p.y) * 0.055;
-          p.vx = (p.vx + ax) * 0.82;
-          p.vy = (p.vy + ay) * 0.82;
-          p.x += p.vx;
-          p.y += p.vy;
-        }
-      } else if (phase === "heartHold" || phase === "textHold") {
-        // Gentle settle + wobble
-        for (const p of particles) {
-          const ax = (p.tx - p.x) * 0.08;
-          const ay = (p.ty - p.y) * 0.08;
-          p.vx = (p.vx + ax) * 0.82;
-          p.vy = (p.vy + ay) * 0.82;
-          p.vx += Math.sin(now * 0.001 + p.phase) * 0.04;
-          p.vy += Math.cos(now * 0.0012 + p.phase) * 0.04;
-          p.x += p.vx;
-          p.y += p.vy;
-        }
-      } else if (phase === "ballSweep") {
-        // Ball position eases left → right across the full width
-        const t = elapsed / T.ballSweep;
-        const ease = t * t * (3 - 2 * t);
-        ballX = -60 + (width + 120) * ease;
-        ballY = height / 2 + Math.sin(t * Math.PI * 2) * 8;
-
-        for (const p of particles) {
-          if (!p.captured && p.tx < ballX + 30) {
-            p.captured = true;
-          }
-          if (p.captured) {
-            // Particle is pulled to ball center + follows with slight trail
-            const dx = ballX - p.x;
-            const dy = ballY - p.y;
-            p.vx = (p.vx + dx * 0.08) * 0.82;
-            p.vy = (p.vy + dy * 0.08) * 0.82;
-            p.x += p.vx;
-            p.y += p.vy;
-          } else {
-            // Stay at text position with gentle idle
-            const ax = (p.tx - p.x) * 0.18;
-            const ay = (p.ty - p.y) * 0.18;
-            p.vx = (p.vx + ax) * 0.7;
-            p.vy = (p.vy + ay) * 0.7;
-            p.x += p.vx;
-            p.y += p.vy;
-          }
-        }
-      } else if (phase === "ballToHeart") {
-        // All particles travel to their heart target
-        const t = elapsed / T.ballToHeart;
-        filterStr = `blur(${Math.max(0, 4 - t * 6)}px)`;
-        for (const p of particles) {
-          const ax = (p.tx - p.x) * 0.08;
-          const ay = (p.ty - p.y) * 0.08;
-          p.vx = (p.vx + ax) * 0.85;
-          p.vy = (p.vy + ay) * 0.85;
-          p.x += p.vx;
-          p.y += p.vy;
-        }
-      }
-
-      // Apply wrapper filter for the streak blur phases
-      wrap.style.filter = filterStr || "";
-
-      // Write transforms (batch, one style.transform per frame)
-      for (const p of particles) {
-        // Brightness from speed — faster = brighter trail look
-        const speed = Math.min(Math.hypot(p.vx, p.vy), 28);
-        const scaleX = phase === "toStreak" ? 1 + speed * 0.35 : 1;
-        p.el.style.transform = `translate3d(${p.x}px, ${p.y}px, 0) scaleX(${scaleX})`;
-      }
-
+      material.uniforms.uTime.value = (now - start) / 1000;
+      renderer.render(scene, camera);
       rafId = requestAnimationFrame(loop);
     };
-
     rafId = requestAnimationFrame(loop);
 
+    // Cleanup
     return () => {
       cancelAnimationFrame(rafId);
-      for (const p of particles) p.el.remove();
+      renderer.dispose();
+      geometry.dispose();
+      material.dispose();
+      if (renderer.domElement.parentNode === container) {
+        container.removeChild(renderer.domElement);
+      }
     };
   }, [words, width, height, particleCount]);
 
   return (
     <div
-      ref={wrapRef}
-      className="pm-wrap"
+      ref={containerRef}
       style={{
         position: "relative",
         width: `${width}px`,
         height: `${height}px`,
         maxWidth: "100%",
       }}
-    >
-      <style>{`
-        .pm-wrap { transition: filter 0.1s linear; }
-        .pm-particle {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 4px;
-          height: 4px;
-          border-radius: 999px;
-          background: #ff3377;
-          box-shadow:
-            0 0 4px rgba(255, 51, 119, 0.85),
-            0 0 10px rgba(255, 20, 90, 0.55);
-          mix-blend-mode: screen;
-          pointer-events: none;
-          will-change: transform;
-          transform-origin: center center;
-        }
-      `}</style>
-    </div>
+    />
   );
 }
