@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type IconName = "grid" | "layers" | "play" | "briefcase";
 
@@ -64,6 +64,8 @@ type Service = {
   image: string;
   stat: { value: string; label: string };
   tint: string;
+  features: string[];
+  cta: string;
 };
 
 const services: Service[] = [
@@ -71,46 +73,91 @@ const services: Service[] = [
     icon: "grid",
     title: "Feed Posts",
     tagline: "Stop the scroll",
-    description: "Branded posts & stories that feel consistent but never boring.",
+    description:
+      "Branded static posts and stories that feel consistent but never boring. We create custom templates, write your captions, and keep the feed on-brand every single week.",
     image: "/portfolio/blitz-signature.png",
     stat: { value: "5–7", label: "posts / week" },
     tint: "rgba(192,132,252,0.28)",
+    features: [
+      "Custom branded templates",
+      "5–7 posts per week",
+      "Caption writing & hashtag strategy",
+      "Stories & highlight covers",
+      "Monthly performance report",
+    ],
+    cta: "Book Feed Posts",
   },
   {
     icon: "layers",
     title: "Carousels",
     tagline: "Teach, don't sell",
-    description: "Swipeable educational decks that drive saves and shares.",
+    description:
+      "Swipeable educational decks that drive saves, shares, and follows. Value-packed slides your audience actually reads instead of scrolling past.",
     image: "/portfolio/carousel-5things.png",
     stat: { value: "3x", label: "save rate" },
     tint: "rgba(255,158,109,0.28)",
+    features: [
+      "Educational, save-worthy content",
+      "7–10 slides per deck",
+      "Brand-consistent design system",
+      "Hook + CTA optimization",
+      "Engagement-focused structure",
+    ],
+    cta: "Book Carousels",
   },
   {
     icon: "play",
     title: "Reels & Shorts",
     tagline: "Built for reach",
-    description: "Trend-aware short video — scripting, editing, posting, all handled.",
+    description:
+      "Trend-aware short video with scripting, editing, and posting handled end-to-end. We chase the trend so you don't have to.",
     image: "/portfolio/reel-pantry.png",
     stat: { value: "10M+", label: "views driven" },
     tint: "rgba(236,72,153,0.28)",
+    features: [
+      "Trend monitoring & matching",
+      "Full scripting & storyboarding",
+      "Professional editing & sound design",
+      "Cross-platform export (IG · TT · YT)",
+      "Posting cadence optimization",
+    ],
+    cta: "Book Reels",
   },
   {
     icon: "briefcase",
     title: "LinkedIn",
     tagline: "Authority at scale",
-    description: "Thought-leadership posts that build trust and drive inbound.",
+    description:
+      "Thought-leadership posts that build trust and drive inbound. Turn your expertise into a pipeline of dream clients and opportunities.",
     image: "/portfolio/doug-founder.png",
     stat: { value: "4x", label: "inbound leads" },
     tint: "rgba(59,129,255,0.28)",
+    features: [
+      "Founder-voice ghostwriting",
+      "Industry thought-leadership angles",
+      "Carousel & document posts",
+      "Network growth strategy",
+      "Inbound opportunity tracking",
+    ],
+    cta: "Book LinkedIn",
   },
   {
     icon: "grid",
     title: "Static Campaigns",
     tagline: "Launch windows",
-    description: "Cohesive visual arcs for product drops and brand moments.",
+    description:
+      "Cohesive visual campaigns for product drops, seasonal promos, and brand moments. Multi-post arcs that build anticipation and momentum.",
     image: "/portfolio/riverside-drop.png",
     stat: { value: "100%", label: "on-brand" },
     tint: "rgba(102,217,239,0.28)",
+    features: [
+      "Launch arc planning (pre / drop / post)",
+      "Cohesive visual system",
+      "Story sequence & countdown assets",
+      "Paid-ready creative variants",
+      "Performance tracking per campaign",
+    ],
+    cta: "Book a Campaign",
   },
 ];
 
@@ -136,10 +183,17 @@ export default function Services() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [hovered, setHovered] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
-  const cycleNext = () => {
-    setActiveIdx((i) => (i + 1) % services.length);
-  };
+  // Close on ESC
+  useEffect(() => {
+    if (expandedIdx === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setExpandedIdx(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [expandedIdx]);
 
   return (
     <section
@@ -183,11 +237,12 @@ export default function Services() {
         {/* Stack container */}
         <div
           className="stack-wrap"
-          onMouseEnter={() => setHovered(true)}
+          onMouseEnter={() => expandedIdx === null && setHovered(true)}
           onMouseLeave={() => {
             setHovered(false);
             setHoveredCard(null);
           }}
+          onClick={() => expandedIdx !== null && setExpandedIdx(null)}
           style={{
             position: "relative",
             width: "100%",
@@ -199,19 +254,21 @@ export default function Services() {
           }}
         >
           {services.map((s, i) => {
-            // Calculate stack position relative to activeIdx
             const stackPos = (i - activeIdx + services.length) % services.length;
             const isTop = stackPos === 0;
+            const isExpanded = expandedIdx === i;
+            const otherExpanded = expandedIdx !== null && expandedIdx !== i;
 
             let transform: string;
-            if (hovered) {
-              // Fan out based on absolute position in array for stable animation
+            if (isExpanded) {
+              transform = "translate(0, 0) rotate(0deg) scale(1.4)";
+            } else if (hovered) {
               transform = fannedTransforms[stackPos] || stackedTransforms[stackPos];
             } else {
               transform = stackedTransforms[stackPos] || stackedTransforms[stackedTransforms.length - 1];
             }
 
-            const isHoveredIndividually = hovered && hoveredCard === i;
+            const isHoveredIndividually = hovered && hoveredCard === i && !isExpanded;
             if (isHoveredIndividually) {
               transform += " translateY(-12px) scale(1.03)";
             }
@@ -220,13 +277,11 @@ export default function Services() {
               <article
                 key={s.title}
                 onClick={(e) => {
-                  if (hovered) {
-                    // When fanned, clicking any card makes it the new top
-                    setActiveIdx(i);
-                  } else if (isTop) {
-                    cycleNext();
-                  }
                   e.stopPropagation();
+                  if (isExpanded) return; // Internal click when expanded — let button handle it
+                  // Any click brings this card forward to full view
+                  setExpandedIdx(i);
+                  setActiveIdx(i);
                 }}
                 onMouseEnter={() => setHoveredCard(i)}
                 onMouseLeave={() => setHoveredCard(null)}
@@ -238,12 +293,16 @@ export default function Services() {
                   overflow: "hidden",
                   transform,
                   transformStyle: "preserve-3d",
-                  transition: "transform 0.7s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s",
-                  zIndex: 100 - stackPos,
-                  cursor: "pointer",
+                  transition: "transform 0.75s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s, box-shadow 0.3s",
+                  zIndex: isExpanded ? 200 : 100 - stackPos,
+                  cursor: isExpanded ? "default" : "pointer",
                   background: "#0f0f1a",
                   border: "1px solid rgba(255,255,255,0.08)",
-                  boxShadow: isTop
+                  opacity: otherExpanded ? 0 : 1,
+                  pointerEvents: otherExpanded ? "none" : "auto",
+                  boxShadow: isExpanded
+                    ? "0 60px 140px rgba(0,0,0,0.85), 0 0 0 1px rgba(192,132,252,0.3), 0 0 60px rgba(139,92,255,0.25)"
+                    : isTop
                     ? "0 40px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(192,132,252,0.15)"
                     : "0 30px 60px rgba(0,0,0,0.6)",
                   willChange: "transform",
@@ -344,27 +403,74 @@ export default function Services() {
                 >
                   <h3
                     style={{
-                      fontSize: "26px",
+                      fontSize: isExpanded ? "20px" : "26px",
                       fontWeight: 700,
                       color: "white",
                       lineHeight: 1.15,
                       letterSpacing: "-0.02em",
                       margin: 0,
+                      transition: "font-size 0.4s",
                     }}
                   >
                     {s.title}
                   </h3>
                   <p
                     style={{
-                      fontSize: "13px",
+                      fontSize: isExpanded ? "10px" : "13px",
                       lineHeight: 1.55,
                       color: "rgba(220,220,232,0.82)",
                       margin: 0,
+                      transition: "font-size 0.4s",
+                      maxHeight: isExpanded ? "60px" : "none",
+                      overflow: "hidden",
                     }}
                   >
                     {s.description}
                   </p>
-                  <div className="flex items-center" style={{ gap: "10px", marginTop: "4px" }}>
+
+                  {/* Expanded features list */}
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "5px",
+                      maxHeight: isExpanded ? "200px" : "0px",
+                      opacity: isExpanded ? 1 : 0,
+                      overflow: "hidden",
+                      transition: "max-height 0.5s ease, opacity 0.4s ease 0.15s",
+                    }}
+                  >
+                    {s.features.map((f) => (
+                      <div
+                        key={f}
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: "5px",
+                          fontSize: "9px",
+                          color: "rgba(230,230,240,0.85)",
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="url(#svc-grad)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: "2px", flexShrink: 0 }}>
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        {f}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div
+                    className="flex items-center"
+                    style={{
+                      gap: "8px",
+                      marginTop: isExpanded ? "6px" : "4px",
+                      opacity: isExpanded ? 0 : 1,
+                      maxHeight: isExpanded ? "0px" : "30px",
+                      overflow: "hidden",
+                      transition: "max-height 0.3s, opacity 0.3s",
+                    }}
+                  >
                     <span
                       style={{
                         fontSize: "20px",
@@ -389,7 +495,67 @@ export default function Services() {
                       {s.stat.label}
                     </span>
                   </div>
+
+                  {/* CTA when expanded */}
+                  <a
+                    href={`mailto:hello@socialpulse.media?subject=${encodeURIComponent(s.cta)}`}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      display: "block",
+                      textAlign: "center",
+                      padding: "7px 14px",
+                      borderRadius: "7px",
+                      fontSize: "10px",
+                      fontWeight: 600,
+                      letterSpacing: "0.02em",
+                      textDecoration: "none",
+                      background: "linear-gradient(135deg, #8b5cff 0%, #3b81ff 100%)",
+                      color: "white",
+                      boxShadow: "0 4px 12px rgba(139,92,255,0.35)",
+                      maxHeight: isExpanded ? "40px" : "0px",
+                      opacity: isExpanded ? 1 : 0,
+                      overflow: "hidden",
+                      transition: "max-height 0.4s, opacity 0.4s ease 0.2s",
+                      marginTop: isExpanded ? "4px" : "0",
+                    }}
+                  >
+                    {s.cta}
+                  </a>
                 </div>
+
+                {/* Close button when expanded */}
+                {isExpanded && (
+                  <button
+                    aria-label="Close"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedIdx(null);
+                    }}
+                    style={{
+                      position: "absolute",
+                      top: "10px",
+                      right: "10px",
+                      width: "22px",
+                      height: "22px",
+                      borderRadius: "999px",
+                      background: "rgba(10,10,18,0.7)",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                      color: "white",
+                      cursor: "pointer",
+                      zIndex: 10,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backdropFilter: "blur(8px)",
+                      WebkitBackdropFilter: "blur(8px)",
+                    }}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                )}
               </article>
             );
           })}
