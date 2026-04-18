@@ -5,22 +5,141 @@ import { useState, useEffect } from "react";
 
 type Item = {
   title: string;
-  tag: string;
-  image: string;
   subtitle: string;
+  image: string;
+  likes: number;
+  comments: number;
 };
 
 const portfolioItems: Item[] = [
-  { title: "Doug Mitchell, Esq.", tag: "LinkedIn", image: "/portfolio/doug-founder.png", subtitle: "Founder Questions" },
-  { title: "Doug Mitchell, Esq.", tag: "LinkedIn", image: "/portfolio/doug-entity.png", subtitle: "Entity Structure Guide" },
-  { title: "Doug Mitchell, Esq.", tag: "LinkedIn", image: "/portfolio/doug-biglaw.png", subtitle: "Why I Left BigLaw" },
-  { title: "Doug Mitchell, Esq.", tag: "LinkedIn", image: "/portfolio/doug-asset.png", subtitle: "Asset vs Stock Sales" },
+  {
+    title: "M&A Readiness",
+    subtitle: "3 Questions Every Founder Should Answer Before Considering a Sale",
+    image: "/portfolio/doug-posts/v2_post_01_founder_questions.png",
+    likes: 428,
+    comments: 37,
+  },
+  {
+    title: "Deal Terms",
+    subtitle: "The Most Overlooked Clause in Every LOI",
+    image: "/portfolio/doug-posts/v2_post_02_overlooked_clause.png",
+    likes: 612,
+    comments: 54,
+  },
+  {
+    title: "Legal Strategy",
+    subtitle: "The Cheapest Hour You'll Ever Spend on a Lawyer",
+    image: "/portfolio/doug-posts/v2_post_03_cheapest_hour.png",
+    likes: 384,
+    comments: 29,
+  },
+  {
+    title: "Entity Structure",
+    subtitle: "LLC vs S-Corp vs C-Corp — The Truth Most Founders Don't Hear",
+    image: "/portfolio/doug-posts/v2_post_04_entity_structure.png",
+    likes: 1243,
+    comments: 89,
+  },
+  {
+    title: "Deal Stories",
+    subtitle: "The Deal That Almost Died at Closing",
+    image: "/portfolio/doug-posts/v2_post_05_deal_almost_died.png",
+    likes: 891,
+    comments: 72,
+  },
+  {
+    title: "Buyer Diligence",
+    subtitle: "What Buyer Reps Really Mean When They Say That",
+    image: "/portfolio/doug-posts/v2_post_06_buyer_reps.png",
+    likes: 467,
+    comments: 41,
+  },
+  {
+    title: "Deal Structure",
+    subtitle: "How Earnouts Actually Work (And When They Backfire)",
+    image: "/portfolio/doug-posts/v2_post_07_earnouts.png",
+    likes: 723,
+    comments: 58,
+  },
+  {
+    title: "Personal",
+    subtitle: "Why I Left BigLaw to Do This",
+    image: "/portfolio/doug-posts/v2_post_08_left_biglaw.png",
+    likes: 1508,
+    comments: 134,
+  },
+  {
+    title: "Deal Structure",
+    subtitle: "Asset Sale vs Stock Sale — The Simple Framework",
+    image: "/portfolio/doug-posts/v2_post_09_asset_vs_stock.png",
+    likes: 387,
+    comments: 42,
+  },
+  {
+    title: "Founder Ops",
+    subtitle: "Fix This Before the End of the Quarter",
+    image: "/portfolio/doug-posts/v2_post_10_fix_this_quarter.png",
+    likes: 298,
+    comments: 24,
+  },
+  {
+    title: "Risk",
+    subtitle: "The True Cost of a Handshake Deal",
+    image: "/portfolio/doug-posts/v2_post_11_handshake_cost.png",
+    likes: 512,
+    comments: 47,
+  },
+  {
+    title: "Contract Law",
+    subtitle: "'Reasonable Efforts' — The Phrase That Sinks Deals",
+    image: "/portfolio/doug-posts/v2_post_12_reasonable_efforts.png",
+    likes: 654,
+    comments: 51,
+  },
+  {
+    title: "Milestone",
+    subtitle: "100 Deals In — Here's What I'd Tell Past Me",
+    image: "/portfolio/doug-posts/v2_post_13_100_deals.png",
+    likes: 2104,
+    comments: 178,
+  },
+  {
+    title: "Due Diligence",
+    subtitle: "The Diligence Gaps That Kill Valuations",
+    image: "/portfolio/doug-posts/v2_post_14_diligence_gaps.png",
+    likes: 442,
+    comments: 36,
+  },
+  {
+    title: "Retention",
+    subtitle: "How Founder Retention Really Gets Negotiated",
+    image: "/portfolio/doug-posts/v2_post_15_founder_retention.png",
+    likes: 378,
+    comments: 31,
+  },
+  {
+    title: "Due Diligence",
+    subtitle: "Controlling Diligence Sprawl Before It Costs You",
+    image: "/portfolio/doug-posts/v2_post_16_diligence_sprawl.png",
+    likes: 289,
+    comments: 22,
+  },
+  {
+    title: "Strategy",
+    subtitle: "Building a Deal Thesis That Actually Closes",
+    image: "/portfolio/doug-posts/v2_post_17_deal_thesis.png",
+    likes: 456,
+    comments: 39,
+  },
 ];
+
+function formatCount(n: number) {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
+  return `${n}`;
+}
 
 export default function Portfolio() {
   const [lightbox, setLightbox] = useState<Item | null>(null);
-
-  // Duplicate for seamless infinite loop
   const looped = [...portfolioItems, ...portfolioItems];
 
   useEffect(() => {
@@ -47,11 +166,7 @@ export default function Portfolio() {
           overflow: "hidden",
         }}
       >
-        <div
-          className="mx-auto flex flex-col"
-          style={{ maxWidth: "1280px", gap: "56px" }}
-        >
-          {/* Section header */}
+        <div className="mx-auto flex flex-col" style={{ maxWidth: "1280px", gap: "56px" }}>
           <div
             className="flex flex-col items-center text-center"
             style={{ gap: "14px", padding: "0 clamp(24px, 6vw, 120px)" }}
@@ -93,7 +208,7 @@ export default function Portfolio() {
           </div>
         </div>
 
-        {/* Marquee carousel — full-bleed for edge fade */}
+        {/* Marquee */}
         <div
           className="marquee-wrapper"
           style={{
@@ -107,158 +222,108 @@ export default function Portfolio() {
             className="marquee-track"
             style={{
               display: "flex",
-              gap: "28px",
+              gap: "24px",
               width: "max-content",
               animation: `marquee ${portfolioItems.length * 8}s linear infinite`,
             }}
           >
-            {looped.map((item, idx) => {
-              return (
+            {looped.map((item, idx) => (
+              <div
+                key={`${item.image}-${idx}`}
+                className="portfolio-card"
+                onClick={() => setLightbox(item)}
+                style={{
+                  flex: "0 0 auto",
+                  width: "clamp(420px, 46vw, 560px)",
+                  borderRadius: "18px",
+                  overflow: "hidden",
+                  cursor: "pointer",
+                  position: "relative",
+                  background: "#0f0f1a",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  boxShadow: "0 14px 40px rgba(0,0,0,0.4)",
+                  transition: "transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-4px)";
+                  e.currentTarget.style.boxShadow = "0 20px 50px rgba(0,0,0,0.55)";
+                  e.currentTarget.style.borderColor = "rgba(139,92,255,0.3)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 14px 40px rgba(0,0,0,0.4)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+                }}
+              >
+                {/* The landscape image */}
                 <div
-                  key={`${item.title}-${item.subtitle}-${idx}`}
-                  className="portfolio-card"
-                  onClick={() => setLightbox(item)}
                   style={{
-                    flex: "0 0 auto",
-                    width: "clamp(360px, 46vw, 560px)",
-                    backgroundColor: "#0f0f1a",
-                    border: "1px solid #1a1a2e",
-                    borderRadius: "22px",
-                    overflow: "hidden",
-                    cursor: "pointer",
                     position: "relative",
+                    width: "100%",
+                    aspectRatio: "1376 / 768",
+                    background: "#07070e",
                   }}
                 >
-                  {/* Framed image */}
-                  <div style={{ padding: "14px 14px 0" }}>
-                    <div
-                      className="silver-frame"
-                      style={{
-                        position: "relative",
-                        width: "100%",
-                        aspectRatio: "1.91 / 1",
-                        padding: "2px",
-                        borderRadius: "14px",
-                        boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
-                        background:
-                          "linear-gradient(135deg, #ffffff 0%, #c8c8d0 18%, #8a8a94 35%, #f0f0f4 50%, #9a9aa4 65%, #d8d8dc 82%, #ffffff 100%)",
-                        backgroundSize: "200% 200%",
-                      }}
-                    >
-                      <div
-                        style={{
-                          position: "relative",
-                          width: "100%",
-                          height: "100%",
-                          overflow: "hidden",
-                          borderRadius: "12px",
-                          backgroundColor: "#07070e",
-                        }}
-                      >
-                      <div className="portfolio-img" style={{ position: "absolute", inset: 0 }}>
-                        <Image
-                          src={item.image}
-                          alt={`${item.title} — ${item.subtitle}`}
-                          fill
-                          sizes="560px"
-                          style={{ objectFit: "contain", objectPosition: "center" }}
-                        />
-                      </div>
+                  <Image
+                    src={item.image}
+                    alt={item.subtitle}
+                    fill
+                    sizes="560px"
+                    style={{ objectFit: "cover", objectPosition: "center" }}
+                  />
+                </div>
 
-                      {/* Inner shadow overlay */}
-                      <div
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          pointerEvents: "none",
-                          boxShadow:
-                            "inset 0 0 8px 2px rgba(0,0,0,0.6), inset 0 0 2px rgba(0,0,0,0.8)",
-                          borderRadius: "12px",
-                          zIndex: 2,
-                        }}
-                      />
-
-                      {/* Preview overlay */}
-                      <div
-                        className="preview-overlay"
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          background:
-                            "linear-gradient(180deg, rgba(7,7,14,0.1) 0%, rgba(7,7,14,0.7) 100%)",
-                          zIndex: 3,
-                        }}
-                      >
-                        <button
-                          className="preview-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setLightbox(item);
-                          }}
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="11" cy="11" r="8" />
-                            <path d="m21 21-4.3-4.3" />
-                          </svg>
-                          Preview
-                        </button>
-                      </div>
-                    </div>
-                    </div>
-                  </div>
-
-                  {/* Card info */}
-                  <div
-                    className="flex items-center justify-between"
-                    style={{ padding: "16px 20px 20px", gap: "12px" }}
-                  >
-                    <div className="flex flex-col" style={{ gap: "3px", minWidth: 0 }}>
-                      <span
-                        style={{
-                          color: "white",
-                          fontSize: "14px",
-                          fontWeight: 600,
-                          letterSpacing: "-0.01em",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {item.title}
-                      </span>
-                      <span
-                        style={{
-                          color: "#9999a6",
-                          fontSize: "12px",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {item.subtitle}
-                      </span>
-                    </div>
+                {/* Metadata row */}
+                <div
+                  className="flex items-center justify-between"
+                  style={{ padding: "14px 18px 16px", gap: "12px" }}
+                >
+                  <div className="flex flex-col" style={{ minWidth: 0, gap: "2px" }}>
                     <span
                       style={{
-                        backgroundColor: "white",
-                        color: "#07070e",
-                        fontSize: "11px",
+                        color: "white",
+                        fontSize: "13px",
                         fontWeight: 600,
-                        padding: "4px 10px",
-                        borderRadius: "999px",
+                        letterSpacing: "-0.01em",
                         whiteSpace: "nowrap",
-                        flexShrink: 0,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
-                      {item.tag}
+                      Doug Mitchell, Esq.
+                    </span>
+                    <span
+                      style={{
+                        color: "#9999a6",
+                        fontSize: "11px",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {item.title}
+                    </span>
+                  </div>
+                  <div
+                    className="flex items-center"
+                    style={{ gap: "10px", flexShrink: 0, color: "#9999a6", fontSize: "11px" }}
+                  >
+                    <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="#8b5cff">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                      </svg>
+                      {formatCount(item.likes)}
+                    </span>
+                    <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9999a6" strokeWidth="2">
+                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                      </svg>
+                      {item.comments}
                     </span>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -266,7 +331,6 @@ export default function Portfolio() {
       {/* Lightbox */}
       {lightbox && (
         <div
-          className="lightbox-backdrop"
           onClick={() => setLightbox(null)}
           style={{
             position: "fixed",
@@ -277,19 +341,23 @@ export default function Portfolio() {
             justifyContent: "center",
             padding: "24px",
             cursor: "zoom-out",
+            background: "rgba(5,5,12,0.88)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
           }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
               position: "relative",
-              maxWidth: "min(900px, 100%)",
+              maxWidth: "min(1100px, 100%)",
               width: "100%",
               cursor: "default",
             }}
           >
             <button
               onClick={() => setLightbox(null)}
+              aria-label="Close"
               style={{
                 position: "absolute",
                 top: "-50px",
@@ -304,9 +372,7 @@ export default function Portfolio() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                backdropFilter: "blur(12px)",
               }}
-              aria-label="Close preview"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
@@ -316,89 +382,57 @@ export default function Portfolio() {
 
             <div
               style={{
-                padding: "12px",
-                backgroundColor: "#0f0f1a",
-                borderRadius: "22px",
-                border: "1px solid #1a1a2e",
+                background: "#0f0f1a",
+                borderRadius: "18px",
+                overflow: "hidden",
+                border: "1px solid rgba(255,255,255,0.08)",
                 boxShadow: "0 24px 80px rgba(0,0,0,0.8)",
               }}
             >
-              <div
-                className="silver-frame"
-                style={{
-                  position: "relative",
-                  aspectRatio: "1.91 / 1",
-                  padding: "2px",
-                  borderRadius: "14px",
-                  background:
-                    "linear-gradient(135deg, #ffffff 0%, #c8c8d0 18%, #8a8a94 35%, #f0f0f4 50%, #9a9aa4 65%, #d8d8dc 82%, #ffffff 100%)",
-                  backgroundSize: "200% 200%",
-                }}
-              >
-                <div
-                  style={{
-                    position: "relative",
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: "12px",
-                    overflow: "hidden",
-                  }}
-                >
-                  <Image
-                    src={lightbox.image}
-                    alt={`${lightbox.title} — ${lightbox.subtitle}`}
-                    fill
-                    sizes="900px"
-                    style={{ objectFit: "contain", objectPosition: "center" }}
-                    priority
-                  />
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      pointerEvents: "none",
-                      boxShadow:
-                        "inset 0 0 10px 3px rgba(0,0,0,0.6), inset 0 0 2px rgba(0,0,0,0.8)",
-                      borderRadius: "12px",
-                    }}
-                  />
-                </div>
+              <div style={{ position: "relative", width: "100%", aspectRatio: "1376 / 768" }}>
+                <Image
+                  src={lightbox.image}
+                  alt={lightbox.subtitle}
+                  fill
+                  sizes="1100px"
+                  style={{ objectFit: "cover", objectPosition: "center" }}
+                  priority
+                />
               </div>
-
-              <div className="flex items-center justify-between" style={{ padding: "16px 8px 4px" }}>
+              <div
+                className="flex items-center justify-between"
+                style={{ padding: "20px 24px", gap: "20px" }}
+              >
                 <div className="flex flex-col" style={{ gap: "4px" }}>
-                  <span
-                    style={{
-                      color: "white",
-                      fontSize: "18px",
-                      fontWeight: 600,
-                      letterSpacing: "-0.01em",
-                    }}
-                  >
-                    {lightbox.title}
+                  <span style={{ color: "white", fontSize: "16px", fontWeight: 600 }}>Doug Mitchell, Esq.</span>
+                  <span style={{ color: "#9999a6", fontSize: "13px" }}>{item_label(lightbox)}</span>
+                </div>
+                <div
+                  className="flex items-center"
+                  style={{ gap: "18px", color: "#9999a6", fontSize: "13px" }}
+                >
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#8b5cff">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                    </svg>
+                    {formatCount(lightbox.likes)}
                   </span>
-                  <span style={{ color: "#9999a6", fontSize: "14px" }}>
-                    {lightbox.subtitle}
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9999a6" strokeWidth="2">
+                      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                    </svg>
+                    {lightbox.comments}
                   </span>
                 </div>
-                <span
-                  style={{
-                    backgroundColor: "white",
-                    color: "#07070e",
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    padding: "6px 14px",
-                    borderRadius: "999px",
-                  }}
-                >
-                  {lightbox.tag}
-                </span>
               </div>
             </div>
           </div>
         </div>
       )}
-
     </>
   );
+}
+
+function item_label(item: Item) {
+  return `${item.title} · ${item.subtitle}`;
 }
