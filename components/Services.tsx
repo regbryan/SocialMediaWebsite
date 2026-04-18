@@ -257,30 +257,31 @@ const services: Service[] = [
   },
 ];
 
-// Flared tunnel: center cards are SMALL and RECESSED, edges are LARGE and FORWARD.
+// Bow-curve tunnel (lightswind pattern): all cards same scale (0.85) and
+// dimmed by default, tilted inward via asymmetric rotation steps.
+// Hover/active: flatten + scale to 1.1 + translateZ 50 + full brightness.
+// Rotation lookup per |delta| (signed by side):
+//   0→0°, 1→15°, 2→30°, 3→40°, 4→50°
 function arcRotation(
   delta: number,
-  maxDelta: number,
+  _maxDelta: number,
   hoveredIdx: number | null,
   activeIdx: number | null,
   myIdx: number
 ): string {
-  // Every card keeps its arc position — active state is indicated by glow
-  // (applied in card style), not by changing transform. This way the active
-  // card never covers its neighbors and all cards remain clickable.
-  const absD = Math.abs(delta);
-  const progress = maxDelta > 0 ? absD / maxDelta : 0;
-  const step = 16;
-  const rotY = -delta * step;
-  const scale = 0.62 + progress * 0.55;
-  const z = -140 + progress * 200;
+  const rotationByAbs = [0, 15, 30, 40, 50];
+  const absD = Math.min(Math.abs(delta), rotationByAbs.length - 1);
+  const magnitude = rotationByAbs[absD];
+  // Left (delta<0) tilts +deg so right edge comes forward toward center viewer;
+  // right (delta>0) tilts -deg so left edge comes forward. Concave arc facing you.
+  const rotY = delta < 0 ? magnitude : -magnitude;
 
-  // Only hover lifts forward (and only when nothing is active)
-  if (activeIdx === null && hoveredIdx === myIdx) {
-    return `translateZ(${z + 120}px) rotateY(0deg) scale(${scale + 0.18})`;
+  // Active or hover: flatten + modest forward pop
+  if (activeIdx === myIdx || (activeIdx === null && hoveredIdx === myIdx)) {
+    return "rotateY(0deg) scale(1.1) translateZ(50px)";
   }
 
-  return `translateZ(${z}px) rotateY(${rotY}deg) scale(${scale})`;
+  return `rotateY(${rotY}deg) scale(0.85)`;
 }
 
 function NavButton({ dir, onClick }: { dir: "left" | "right"; onClick: () => void }) {
@@ -395,7 +396,7 @@ export default function Services() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            gap: 0,
+            gap: "10px",
             transformStyle: "preserve-3d",
             minHeight: "460px",
             pointerEvents: "none",
@@ -417,26 +418,31 @@ export default function Services() {
                 onMouseLeave={() => setHoveredIdx(null)}
                 style={{
                   flex: "0 0 auto",
-                  width: "145px",
-                  height: "310px",
+                  width: "140px",
+                  height: "240px",
                   pointerEvents: "auto",
                   transform,
                   transformOrigin: "center center",
                   transition:
-                    "transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, filter 0.35s ease",
+                    "transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 0.4s ease, box-shadow 0.4s ease",
                   cursor: "pointer",
-                  borderRadius: "18px",
+                  borderRadius: "12px",
                   overflow: "hidden",
                   background: "#0f0f1a",
                   border: isActive
-                    ? "1px solid rgba(192,132,252,0.45)"
-                    : "1px solid rgba(255,255,255,0.06)",
+                    ? "1px solid rgba(192,132,252,0.4)"
+                    : "1px solid rgba(255,255,255,0.05)",
                   boxShadow: isActive
-                    ? "0 40px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(192,132,252,0.25), 0 0 60px rgba(139,92,255,0.3)"
-                    : "0 24px 60px rgba(0,0,0,0.5)",
-                  opacity: isDimmed ? 0.28 : 1,
-                  filter: isDimmed ? "blur(1px)" : "none",
-                  willChange: "transform, opacity",
+                    ? "0 20px 50px rgba(0,0,0,0.8), 0 0 40px rgba(139,92,255,0.25)"
+                    : "0 10px 30px rgba(0,0,0,0.5)",
+                  // Bow-curve pattern: dim by default, full brightness when
+                  // active or hovered, slightly more dim when something else is active
+                  filter: isActive
+                    ? "brightness(1)"
+                    : isDimmed
+                    ? "brightness(0.35)"
+                    : "brightness(0.6)",
+                  willChange: "transform, filter",
                   position: "relative",
                   zIndex: isActive ? 200 : 100 - Math.abs(delta),
                 }}
