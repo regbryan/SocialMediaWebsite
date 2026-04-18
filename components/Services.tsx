@@ -161,33 +161,18 @@ const services: Service[] = [
   },
 ];
 
-// Signed shortest delta from `i` to `active` on a circular list of length `n`
-function circularDelta(i: number, active: number, n: number) {
-  let d = i - active;
-  if (d > n / 2) d -= n;
-  if (d < -n / 2) d += n;
-  return d;
-}
-
-// Compute the 3D transform for a card given its distance from the center slot
-function tunnelTransform(delta: number): { transform: string; opacity: number; zIndex: number } {
-  const abs = Math.abs(delta);
-  if (abs === 0) {
-    return { transform: "translateX(0) translateZ(0) rotateY(0deg) scale(1)", opacity: 1, zIndex: 100 };
+// Fixed-arc tunnel: all cards visible in a row, each rotated toward the center
+// so the whole row reads as the inside of a curved wall facing the viewer.
+// Delta is the signed distance from the middle of the array.
+function arcRotation(delta: number, hoveredIdx: number | null, myIdx: number): string {
+  // Base tilt per step. 5 cards → extremes sit at ±2 * 22 = 44deg
+  const step = 22;
+  const base = -delta * step;
+  // If user hovers a card, flatten it and gently unroll the rest
+  if (hoveredIdx === myIdx) {
+    return "rotateY(0deg) translateZ(60px) scale(1.05)";
   }
-  // Side cards fan out and recede
-  const sign = delta > 0 ? 1 : -1;
-  const tx = sign * Math.min(abs, 3) * 230; // 230px per step sideways (capped)
-  const tz = -Math.min(abs, 3) * 180; // 180px back per step (capped)
-  const ry = -sign * Math.min(abs, 2) * 32; // tilt toward center
-  const scale = abs === 1 ? 0.88 : abs === 2 ? 0.74 : 0.6;
-  const opacity = abs === 1 ? 0.92 : abs === 2 ? 0.55 : abs === 3 ? 0.18 : 0;
-  const zIndex = 100 - abs;
-  return {
-    transform: `translateX(${tx}px) translateZ(${tz}px) rotateY(${ry}deg) scale(${scale})`,
-    opacity,
-    zIndex,
-  };
+  return `rotateY(${base}deg)`;
 }
 
 function NavButton({ dir, onClick }: { dir: "left" | "right"; onClick: () => void }) {
@@ -232,23 +217,11 @@ function NavButton({ dir, onClick }: { dir: "left" | "right"; onClick: () => voi
 }
 
 export default function Services() {
-  const [activeIdx, setActiveIdx] = useState(0);
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
   const n = services.length;
-  const go = (dir: 1 | -1) => setActiveIdx((i) => (i + dir + n) % n);
-
-  // Keyboard arrow support
-  useEffect(() => {
-    if (expandedIdx !== null) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") go(-1);
-      if (e.key === "ArrowRight") go(1);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expandedIdx]);
+  const center = (n - 1) / 2;
 
   // Modal ESC close
   useEffect(() => {
@@ -300,70 +273,51 @@ export default function Services() {
         </div>
       </div>
 
-      {/* Tunnel carousel */}
+      {/* Fixed-arc tunnel — all cards visible, each rotated toward center */}
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "20px",
-          maxWidth: "1440px",
-          margin: "48px auto 0",
+          margin: "56px auto 0",
           padding: "0 clamp(16px, 3vw, 40px)",
+          perspective: "1100px",
+          perspectiveOrigin: "50% 50%",
         }}
       >
-        <NavButton dir="left" onClick={() => go(-1)} />
-
         <div
           style={{
-            flex: 1,
-            position: "relative",
-            height: "520px",
-            perspective: "1800px",
-            perspectiveOrigin: "50% 50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "4px",
+            transformStyle: "preserve-3d",
+            minHeight: "460px",
           }}
         >
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              transformStyle: "preserve-3d",
-            }}
-          >
-            {services.map((s, i) => {
-              const delta = circularDelta(i, activeIdx, n);
-              const { transform, opacity, zIndex } = tunnelTransform(delta);
-              const isCenter = delta === 0;
-              return (
-                <article
-                  key={s.title}
-                  onClick={() => {
-                    if (isCenter) setExpandedIdx(i);
-                    else setActiveIdx(i);
-                  }}
-                  style={{
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    width: "320px",
-                    height: "440px",
-                    marginLeft: "-160px",
-                    marginTop: "-220px",
-                    transform,
-                    opacity,
-                    zIndex,
-                    transition: "transform 0.7s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease",
-                    transformStyle: "preserve-3d",
-                    cursor: isCenter ? "pointer" : "pointer",
-                    borderRadius: "22px",
-                    overflow: "hidden",
-                    background: "#0f0f1a",
-                    border: isCenter ? "1px solid rgba(192,132,252,0.35)" : "1px solid rgba(255,255,255,0.06)",
-                    boxShadow: isCenter
-                      ? "0 50px 120px rgba(0,0,0,0.75), 0 0 0 1px rgba(192,132,252,0.2), 0 0 60px rgba(139,92,255,0.2)"
-                      : "0 30px 70px rgba(0,0,0,0.55)",
-                    willChange: "transform, opacity",
-                  }}
-                >
+          {services.map((s, i) => {
+            const delta = i - center;
+            const transform = arcRotation(delta, hoveredIdx, i);
+            return (
+              <article
+                key={s.title}
+                onClick={() => setExpandedIdx(i)}
+                onMouseEnter={() => setHoveredIdx(i)}
+                onMouseLeave={() => setHoveredIdx(null)}
+                style={{
+                  flex: "0 0 auto",
+                  width: "200px",
+                  height: "360px",
+                  transform,
+                  transformOrigin: "center center",
+                  transition: "transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)",
+                  cursor: "pointer",
+                  borderRadius: "18px",
+                  overflow: "hidden",
+                  background: "#0f0f1a",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  boxShadow: "0 24px 60px rgba(0,0,0,0.5)",
+                  willChange: "transform",
+                  position: "relative",
+                }}
+              >
                   {/* Background image */}
                   <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
                     <Image src={s.image} alt={s.title} fill sizes="340px" style={{ objectFit: "cover" }} priority={i < 3} />
@@ -503,42 +457,7 @@ export default function Services() {
                 </article>
               );
             })}
-          </div>
         </div>
-
-        <NavButton dir="right" onClick={() => go(1)} />
-      </div>
-
-      {/* Progress dots */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "10px",
-          marginTop: "32px",
-        }}
-      >
-        {services.map((_, i) => {
-          const active = i === activeIdx;
-          return (
-            <button
-              key={i}
-              onClick={() => setActiveIdx(i)}
-              aria-label={`Go to ${services[i].title}`}
-              style={{
-                width: active ? "28px" : "8px",
-                height: "8px",
-                borderRadius: "999px",
-                border: "none",
-                background: active ? "linear-gradient(90deg, #8b5cff, #3b81ff)" : "rgba(255,255,255,0.15)",
-                cursor: "pointer",
-                transition: "width 0.35s cubic-bezier(0.22, 1, 0.36, 1), background 0.35s",
-                padding: 0,
-              }}
-            />
-          );
-        })}
       </div>
 
       {/* Detail modal (reused) */}
