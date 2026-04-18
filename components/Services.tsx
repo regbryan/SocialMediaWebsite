@@ -422,8 +422,8 @@ export default function Services() {
                 onMouseLeave={() => setHoveredIdx(null)}
                 style={{
                   flex: "0 0 auto",
-                  width: "130px",
-                  height: "220px",
+                  width: "150px",
+                  height: "150px",
                   pointerEvents: "auto",
                   transform,
                   transformOrigin: "center center",
@@ -450,19 +450,20 @@ export default function Services() {
                   zIndex: isActive ? 200 : 100 - Math.abs(delta),
                 }}
               >
-                  {/* Background image */}
-                  <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
-                    <Image src={s.image} alt={s.title} fill sizes="340px" style={{ objectFit: "cover" }} priority={i < 3} />
+                  {/* Background image — contain to show full design, no crop */}
+                  <div style={{ position: "absolute", inset: 0, zIndex: 0, background: "#0a0a14" }}>
+                    <Image src={s.image} alt={s.title} fill sizes="340px" style={{ objectFit: "contain", objectPosition: "center" }} priority={i < 3} />
                   </div>
 
-                  {/* Tint */}
+                  {/* Subtle tint for brand cohesion */}
                   <div
                     style={{
                       position: "absolute",
                       inset: 0,
-                      background: `radial-gradient(ellipse at 25% 20%, ${s.tint} 0%, transparent 55%)`,
+                      background: `radial-gradient(ellipse at 25% 20%, ${s.tint} 0%, transparent 65%)`,
                       zIndex: 1,
                       mixBlendMode: "screen",
+                      pointerEvents: "none",
                     }}
                   />
 
