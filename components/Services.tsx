@@ -265,9 +265,9 @@ function arcRotation(
   activeIdx: number | null,
   myIdx: number
 ): string {
-  // Active card flies forward out of the arc
+  // Active card flies forward out of the arc (gentler — doesn't cover the header)
   if (activeIdx === myIdx) {
-    return "translateZ(340px) rotateY(0deg) scale(1.55)";
+    return "translateZ(140px) rotateY(0deg) scale(1.15)";
   }
   // Hover peeks forward (only when nothing is active)
   if (activeIdx === null && hoveredIdx === myIdx) {
@@ -384,7 +384,6 @@ export default function Services() {
 
       {/* Fixed-arc tunnel — all cards visible, each rotated toward center */}
       <div
-        onClick={() => setActiveIdx(null)}
         style={{
           margin: "56px auto 0",
           padding: "0 clamp(16px, 3vw, 40px)",
