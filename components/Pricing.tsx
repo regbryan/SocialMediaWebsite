@@ -71,8 +71,21 @@ const plans: Plan[] = [
   },
 ];
 
-function PricingCard({ plan }: { plan: Plan }) {
+function PricingCard({ plan, position }: { plan: Plan; position: number }) {
   const [flipped, setFlipped] = useState(false);
+  const [hovered, setHovered] = useState(false);
+
+  // Stacked 3D: middle card forward, side cards behind and tilted inward
+  const isLeft = position === 0;
+  const isRight = position === 2;
+  const isMiddle = position === 1;
+  const tiltDeg = isLeft ? 14 : isRight ? -14 : 0;
+  const behindZ = isMiddle ? 60 : -40;
+  const scaleRest = isMiddle ? 1.05 : 0.9;
+  const shiftX = isLeft ? 40 : isRight ? -40 : 0;
+  const restTransform = `translateX(${shiftX}px) translateZ(${behindZ}px) rotateY(${tiltDeg}deg) scale(${scaleRest})`;
+  const hoverTransform = `translateX(0) translateZ(${isMiddle ? 80 : 30}px) rotateY(0deg) scale(${isMiddle ? 1.1 : 1.02})`;
+  const zIndex = isMiddle ? 3 : 1;
 
   const frontBg = plan.popular
     ? "linear-gradient(145deg, #1a0f3a 0%, #2a1566 55%, #3b1f8a 100%)"
@@ -84,11 +97,21 @@ function PricingCard({ plan }: { plan: Plan }) {
   return (
     <div
       className="pricing-scene"
-      style={{ perspective: "1200px", width: "100%", maxWidth: "300px" }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        width: "100%",
+        maxWidth: "300px",
+        transformStyle: "preserve-3d",
+        transform: hovered ? hoverTransform : restTransform,
+        transition: "transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1)",
+        zIndex,
+        position: "relative",
+      }}
     >
       <div
         className={`pricing-card-wrap ${flipped ? "flipped" : ""}`}
-        style={{ width: "100%", height: "410px", cursor: "pointer" }}
+        style={{ width: "100%", height: "410px", cursor: "pointer", perspective: "1200px" }}
         onClick={() => setFlipped((f) => !f)}
         role="button"
         tabIndex={0}
@@ -478,10 +501,15 @@ export default function Pricing() {
         {/* Cards */}
         <div
           className="grid grid-cols-1 md:grid-cols-3 justify-items-center"
-          style={{ gap: "28px", alignItems: "stretch" }}
+          style={{
+            gap: "0px",
+            alignItems: "center",
+            perspective: "1800px",
+            perspectiveOrigin: "center center",
+          }}
         >
-          {plans.map((plan) => (
-            <PricingCard key={plan.name} plan={plan} />
+          {plans.map((plan, i) => (
+            <PricingCard key={plan.name} plan={plan} position={i} />
           ))}
         </div>
       </div>
