@@ -3,54 +3,25 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 
-type Platform = "Instagram Posts" | "Carousels" | "Reels" | "LinkedIn" | "Commercials";
-
-const tabs: Platform[] = ["Instagram Posts", "Carousels", "Reels", "LinkedIn", "Commercials"];
-
 type Item = {
   title: string;
   tag: string;
   image: string;
   subtitle: string;
-  platform: Platform;
 };
 
 const portfolioItems: Item[] = [
-  { title: "Inland Empire Comfort", platform: "Instagram Posts", tag: "Instagram", image: "/portfolio/iec-night.png", subtitle: "Emergency Service" },
-  { title: "Riverside Hat Co", platform: "Instagram Posts", tag: "Instagram", image: "/portfolio/riverside-drop.png", subtitle: "New Drop" },
-  { title: "Omega Mortgage", platform: "Instagram Posts", tag: "Instagram", image: "/portfolio/omega-tax.png", subtitle: "Tax Refund Campaign" },
-  { title: "Inland Empire Comfort", platform: "Instagram Posts", tag: "Instagram", image: "/portfolio/iec-spring.png", subtitle: "Spring Tune-Up" },
-  { title: "SC Boardwalk Crew", platform: "Instagram Posts", tag: "Instagram", image: "/portfolio/scboardwalk-ride.png", subtitle: "Hiring Campaign" },
-  { title: "Omega Mortgage", platform: "Instagram Posts", tag: "Instagram", image: "/portfolio/omega-credit.png", subtitle: "Credit Score Guide" },
-
-  { title: "Blitz Organization", platform: "Carousels", tag: "Carousel", image: "/portfolio/carousel-3bin.png", subtitle: "The 3-Bin Rule" },
-  { title: "Blitz Organization", platform: "Carousels", tag: "Carousel", image: "/portfolio/carousel-5things.png", subtitle: "5 Things to Throw Away" },
-  { title: "Blitz Organization", platform: "Carousels", tag: "Carousel", image: "/portfolio/carousel-signature.png", subtitle: "Our Signature Process" },
-  { title: "Inland Empire Comfort", platform: "Carousels", tag: "Carousel", image: "/portfolio/iec-summer.png", subtitle: "Beat the Heat" },
-  { title: "Riverside Hat Co", platform: "Carousels", tag: "Carousel", image: "/portfolio/riverside-made.png", subtitle: "How It's Made" },
-  { title: "Inland Empire Comfort", platform: "Carousels", tag: "Carousel", image: "/portfolio/iec-tuneup.png", subtitle: "Tune-Up Checklist" },
-
-  { title: "Blitz Organization", platform: "Reels", tag: "Reel", image: "/portfolio/reel-closet.png", subtitle: "Kid's Closet Reset" },
-  { title: "Blitz Organization", platform: "Reels", tag: "Reel", image: "/portfolio/reel-pantry.png", subtitle: "Pantry Tips" },
-  { title: "Inland Empire Comfort", platform: "Reels", tag: "Reel", image: "/portfolio/reel-family.png", subtitle: "Family-Owned Story" },
-
-  { title: "Doug Mitchell, Esq.", platform: "LinkedIn", tag: "LinkedIn", image: "/portfolio/doug-founder.png", subtitle: "Founder Questions" },
-  { title: "Doug Mitchell, Esq.", platform: "LinkedIn", tag: "LinkedIn", image: "/portfolio/doug-entity.png", subtitle: "Entity Structure Guide" },
-  { title: "Doug Mitchell, Esq.", platform: "LinkedIn", tag: "LinkedIn", image: "/portfolio/doug-biglaw.png", subtitle: "Why I Left BigLaw" },
-  { title: "Doug Mitchell, Esq.", platform: "LinkedIn", tag: "LinkedIn", image: "/portfolio/doug-asset.png", subtitle: "Asset vs Stock Sales" },
-
-  { title: "Riverside Hat Co", platform: "Commercials", tag: "Branded", image: "/portfolio/riverside-drop.png", subtitle: "Brand Campaign" },
-  { title: "Omega Mortgage", platform: "Commercials", tag: "Branded", image: "/portfolio/omega-tax.png", subtitle: "Tax Day Spot" },
-  { title: "SC Boardwalk Crew", platform: "Commercials", tag: "Branded", image: "/portfolio/scboardwalk-ride.png", subtitle: "Summer Jobs Spot" },
+  { title: "Doug Mitchell, Esq.", tag: "LinkedIn", image: "/portfolio/doug-founder.png", subtitle: "Founder Questions" },
+  { title: "Doug Mitchell, Esq.", tag: "LinkedIn", image: "/portfolio/doug-entity.png", subtitle: "Entity Structure Guide" },
+  { title: "Doug Mitchell, Esq.", tag: "LinkedIn", image: "/portfolio/doug-biglaw.png", subtitle: "Why I Left BigLaw" },
+  { title: "Doug Mitchell, Esq.", tag: "LinkedIn", image: "/portfolio/doug-asset.png", subtitle: "Asset vs Stock Sales" },
 ];
 
 export default function Portfolio() {
-  const [activeTab, setActiveTab] = useState<Platform>("Instagram Posts");
   const [lightbox, setLightbox] = useState<Item | null>(null);
 
-  const filtered = portfolioItems.filter((item) => item.platform === activeTab);
   // Duplicate for seamless infinite loop
-  const looped = [...filtered, ...filtered];
+  const looped = [...portfolioItems, ...portfolioItems];
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -117,49 +88,8 @@ export default function Portfolio() {
                 maxWidth: "520px",
               }}
             >
-              Real work for real clients across platforms and content types.
+              LinkedIn thought-leadership that turns expertise into inbound.
             </p>
-          </div>
-
-          {/* Tab bar */}
-          <div className="flex justify-center" style={{ padding: "0 clamp(24px, 6vw, 120px)" }}>
-            <div
-              className="flex flex-wrap justify-center"
-              style={{
-                backgroundColor: "#0f0f1a",
-                border: "1px solid #1a1a2e",
-                borderRadius: "14px",
-                padding: "6px",
-                gap: "4px",
-                maxWidth: "100%",
-              }}
-            >
-              {tabs.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className="btn-ghost"
-                  style={{
-                    background:
-                      activeTab === tab
-                        ? "linear-gradient(120deg, #8b5cff, #3b81ff)"
-                        : "transparent",
-                    color: activeTab === tab ? "white" : "#9999a6",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    padding: "10px 20px",
-                    borderRadius: "10px",
-                    border: "none",
-                    cursor: "pointer",
-                    whiteSpace: "nowrap",
-                    boxShadow:
-                      activeTab === tab ? "0 4px 16px rgba(139,92,255,0.3)" : "none",
-                  }}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
 
@@ -175,20 +105,14 @@ export default function Portfolio() {
         >
           <div
             className="marquee-track"
-            key={activeTab}
             style={{
               display: "flex",
               gap: "28px",
               width: "max-content",
-              animation: `marquee ${filtered.length * 6}s linear infinite`,
+              animation: `marquee ${portfolioItems.length * 8}s linear infinite`,
             }}
           >
             {looped.map((item, idx) => {
-              const isLinkedIn = item.platform === "LinkedIn";
-              const cardWidth = isLinkedIn
-                ? "clamp(360px, 46vw, 560px)"
-                : "clamp(280px, 30vw, 340px)";
-              const imgAspect = isLinkedIn ? "1.91 / 1" : "4 / 5";
               return (
                 <div
                   key={`${item.title}-${item.subtitle}-${idx}`}
@@ -196,7 +120,7 @@ export default function Portfolio() {
                   onClick={() => setLightbox(item)}
                   style={{
                     flex: "0 0 auto",
-                    width: cardWidth,
+                    width: "clamp(360px, 46vw, 560px)",
                     backgroundColor: "#0f0f1a",
                     border: "1px solid #1a1a2e",
                     borderRadius: "22px",
@@ -212,7 +136,7 @@ export default function Portfolio() {
                       style={{
                         position: "relative",
                         width: "100%",
-                        aspectRatio: imgAspect,
+                        aspectRatio: "1.91 / 1",
                         padding: "2px",
                         borderRadius: "14px",
                         boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
@@ -236,7 +160,7 @@ export default function Portfolio() {
                           src={item.image}
                           alt={`${item.title} — ${item.subtitle}`}
                           fill
-                          sizes={isLinkedIn ? "560px" : "340px"}
+                          sizes="560px"
                           style={{ objectFit: "cover", objectPosition: "top center" }}
                         />
                       </div>
@@ -359,7 +283,7 @@ export default function Portfolio() {
             onClick={(e) => e.stopPropagation()}
             style={{
               position: "relative",
-              maxWidth: lightbox.platform === "LinkedIn" ? "min(900px, 100%)" : "min(520px, 100%)",
+              maxWidth: "min(900px, 100%)",
               width: "100%",
               cursor: "default",
             }}
@@ -403,7 +327,7 @@ export default function Portfolio() {
                 className="silver-frame"
                 style={{
                   position: "relative",
-                  aspectRatio: lightbox.platform === "LinkedIn" ? "1.91 / 1" : "4 / 5",
+                  aspectRatio: "1.91 / 1",
                   padding: "2px",
                   borderRadius: "14px",
                   background:
@@ -424,7 +348,7 @@ export default function Portfolio() {
                     src={lightbox.image}
                     alt={`${lightbox.title} — ${lightbox.subtitle}`}
                     fill
-                    sizes={lightbox.platform === "LinkedIn" ? "900px" : "520px"}
+                    sizes="900px"
                     style={{ objectFit: "cover", objectPosition: "top center" }}
                     priority
                   />
