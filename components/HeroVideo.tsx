@@ -1,55 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import LightRays from "./LightRays";
+import ParticleMorph from "./ParticleMorph";
 
-const words = ["VIRAL", "GROWTH", "REACH", "VIEWS", "LOYALTY", "IMPACT"];
-const HOLD_MS = 2000;
-const MORPH_MS = 900;
-
-type MorphState = {
-  curr: string;
-  prev: string | null;
-};
-
-const wordStyle: React.CSSProperties = {
-  position: "absolute",
-  fontSize: "clamp(56px, 9vw, 108px)",
-  fontWeight: 900,
-  letterSpacing: "-0.03em",
-  lineHeight: 1,
-  background: "linear-gradient(135deg, #c084fc 0%, #8b5cff 35%, #3b81ff 100%)",
-  WebkitBackgroundClip: "text",
-  backgroundClip: "text",
-  WebkitTextFillColor: "transparent",
-  whiteSpace: "nowrap",
-  willChange: "transform, filter, opacity",
-};
+const words = ["VIRAL", "GROWTH", "REACH", "LOYALTY", "IMPACT"];
 
 export default function HeroVideo() {
-  const [state, setState] = useState<MorphState>({ curr: words[0], prev: null });
-
-  useEffect(() => {
-    let idx = 0;
-    let holdTimer: ReturnType<typeof setTimeout>;
-    let clearPrevTimer: ReturnType<typeof setTimeout>;
-
-    const startMorph = () => {
-      idx = (idx + 1) % words.length;
-      setState((s) => ({ curr: words[idx], prev: s.curr }));
-      clearPrevTimer = setTimeout(() => {
-        setState((s) => ({ curr: s.curr, prev: null }));
-        holdTimer = setTimeout(startMorph, HOLD_MS);
-      }, MORPH_MS);
-    };
-
-    holdTimer = setTimeout(startMorph, HOLD_MS);
-    return () => {
-      clearTimeout(holdTimer);
-      clearTimeout(clearPrevTimer);
-    };
-  }, []);
-
   return (
     <div
       style={{
@@ -78,15 +34,15 @@ export default function HeroVideo() {
       {/* Subtle grid */}
       <div className="hero-grid-overlay" />
 
-      {/* Kinetic typography — pushed to the right */}
-      <div style={{ position: "relative", zIndex: 3, textAlign: "center", width: "min(520px, 45vw)" }}>
+      {/* Particle morph canvas — heart ↔ word loop */}
+      <div style={{ position: "relative", zIndex: 3, textAlign: "center", width: "min(560px, 48vw)" }}>
         <div
           style={{
             fontSize: 14,
             fontWeight: 600,
             letterSpacing: "0.3em",
             color: "rgba(180, 180, 200, 0.7)",
-            marginBottom: 18,
+            marginBottom: 16,
             textTransform: "uppercase",
           }}
         >
@@ -96,21 +52,21 @@ export default function HeroVideo() {
         <div
           style={{
             position: "relative",
-            height: 140,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            filter: "drop-shadow(0 4px 24px rgba(139, 92, 255, 0.35))",
+            filter: "drop-shadow(0 4px 30px rgba(236, 72, 153, 0.28))",
           }}
         >
-          {state.prev && (
-            <div key={`out-${state.prev}`} className="morph-exit" style={wordStyle}>
-              {state.prev}
-            </div>
-          )}
-          <div key={`in-${state.curr}`} className="morph-enter" style={wordStyle}>
-            {state.curr}
-          </div>
+          <ParticleMorph
+            words={words}
+            width={560}
+            height={200}
+            holdMs={2200}
+            morphMs={1400}
+            particleSize={2.4}
+            particleCount={1500}
+          />
         </div>
 
         <div
@@ -118,7 +74,7 @@ export default function HeroVideo() {
             fontSize: 18,
             fontWeight: 500,
             color: "rgba(220, 220, 240, 0.8)",
-            marginTop: 22,
+            marginTop: 16,
           }}
         >
           at the speed of social
@@ -136,47 +92,6 @@ export default function HeroVideo() {
           -webkit-mask-image: radial-gradient(ellipse 60% 60% at center, black 20%, transparent 80%);
           pointer-events: none;
           z-index: 2;
-        }
-
-        .morph-enter {
-          animation: morphIn ${MORPH_MS}ms cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-        .morph-exit {
-          animation: morphOut ${MORPH_MS}ms cubic-bezier(0.55, 0, 0.8, 0.2) both;
-        }
-        @keyframes morphIn {
-          0% {
-            opacity: 0;
-            filter: blur(36px);
-            transform: scale(0.82);
-            letter-spacing: 0.3em;
-          }
-          60% {
-            opacity: 1;
-            filter: blur(2px);
-            transform: scale(1.02);
-            letter-spacing: -0.02em;
-          }
-          100% {
-            opacity: 1;
-            filter: blur(0);
-            transform: scale(1);
-            letter-spacing: -0.03em;
-          }
-        }
-        @keyframes morphOut {
-          0% {
-            opacity: 1;
-            filter: blur(0);
-            transform: scale(1);
-            letter-spacing: -0.03em;
-          }
-          100% {
-            opacity: 0;
-            filter: blur(36px);
-            transform: scale(1.25);
-            letter-spacing: 0.2em;
-          }
         }
       `}</style>
     </div>
