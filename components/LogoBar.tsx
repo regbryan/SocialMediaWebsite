@@ -99,13 +99,20 @@ export default function LogoBar() {
         >
           {loopedLogos.map((logo, i) => (
             <div key={`${logo.alt}-${i}`} style={{ height: "60px", flexShrink: 0 }}>
-              <div style={{ position: "relative", width: "160px", height: "60px" }}>
+              <div
+                className="logo-mono"
+                style={{ position: "relative", width: "160px", height: "60px" }}
+              >
                 <Image
                   src={logo.src}
                   alt={logo.alt}
                   fill
                   sizes="160px"
-                  style={{ objectFit: "contain" }}
+                  style={{
+                    objectFit: "contain",
+                    filter: "brightness(0) invert(1)",
+                    opacity: 0.6,
+                  }}
                 />
               </div>
             </div>

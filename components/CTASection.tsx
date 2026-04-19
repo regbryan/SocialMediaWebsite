@@ -19,17 +19,10 @@ export default function CTASection() {
           }}
         >
           <h2
-            style={{
-              fontSize: "clamp(28px, 3.5vw, 40px)",
-              fontWeight: 700,
-              color: "white",
-              lineHeight: 1.15,
-              letterSpacing: "-0.02em",
-              margin: 0,
-              maxWidth: "640px",
-            }}
+            className="display-heading"
+            style={{ fontSize: "clamp(44px, 6vw, 80px)", maxWidth: "900px" }}
           >
-            Ready to Transform Your Social Media?
+            Ready to <span className="accent">Transform</span> Your Social Media?
           </h2>
           <p
             style={{

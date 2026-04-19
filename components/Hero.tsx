@@ -1,12 +1,3 @@
-import HeroVideo from "./HeroVideo";
-
-const stats = [
-  { value: "500+", label: "Posts Created" },
-  { value: "50+", label: "Happy Clients" },
-  { value: "3x", label: "Avg. Engagement" },
-  { value: "24/7", label: "Content Pipeline" },
-];
-
 export default function Hero() {
   return (
     <section
@@ -17,154 +8,161 @@ export default function Hero() {
         minHeight: "100vh",
         padding: "100px clamp(24px, 6vw, 120px) 80px",
         overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
       }}
     >
-      {/* Ambient glow */}
-      <div className="hero-glow" />
-
-      {/* Full-width motion graphic background */}
-      <div style={{ position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none" }}>
-        <HeroVideo />
-      </div>
-
+      {/* Ambient floating orbs — purple + blue brand */}
       <div
-        className="mx-auto grid items-center"
+        aria-hidden
         style={{
-          maxWidth: "1280px",
+          position: "absolute",
+          top: "18%",
+          left: "8%",
+          width: "384px",
+          height: "384px",
+          borderRadius: "50%",
+          background: "#8b5cff",
+          opacity: 0.2,
+          filter: "blur(120px)",
+          animation: "hero-orb-float 6s ease-in-out infinite",
+          pointerEvents: "none",
+        }}
+      />
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          bottom: "12%",
+          right: "10%",
+          width: "384px",
+          height: "384px",
+          borderRadius: "50%",
+          background: "#3b81ff",
+          opacity: 0.2,
+          filter: "blur(120px)",
+          animation: "hero-orb-float 6s ease-in-out infinite 3s",
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Main content — asymmetric, editorial */}
+      <div
+        className="mx-auto"
+        style={{
+          maxWidth: "1440px",
+          width: "100%",
           position: "relative",
           zIndex: 1,
-          gap: "48px",
-          gridTemplateColumns: "1fr",
         }}
       >
-        <div
-          className="hero-grid"
+        {/* Massive display headline */}
+        <h1
           style={{
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            gap: "48px",
-            alignItems: "start",
+            fontFamily: "var(--font-anton), 'Anton', sans-serif",
+            fontSize: "clamp(48px, 10vw, 144px)",
+            lineHeight: 0.9,
+            letterSpacing: "-0.03em",
+            textTransform: "uppercase",
+            color: "white",
+            margin: 0,
+            fontWeight: 400,
           }}
         >
-          {/* Left column — content */}
-          <div
-            className="flex flex-col hero-content-col"
-            style={{ gap: "28px" }}
+          Content
+          <br />
+          <span
+            style={{
+              WebkitTextStroke: "1.5px #c084fc",
+              color: "transparent",
+            }}
           >
-            {/* Headline */}
-            <h1
-              className="text-center lg:text-left"
-              style={{
-                fontSize: "clamp(40px, 6vw, 64px)",
-                fontWeight: 700,
-                lineHeight: 1.05,
-                letterSpacing: "-0.03em",
-                color: "white",
-                margin: 0,
-              }}
-            >
-              Elevate Your Brand&apos;s
-              <br />
-              <span className="gradient-text">Social Presence</span>
-            </h1>
+            That
+            <br />
+            Converts
+          </span>
+        </h1>
 
-            {/* Description */}
-            <p
-              className="text-center lg:text-left"
-              style={{
-                fontSize: "18px",
-                lineHeight: 1.6,
-                color: "#9999a6",
-                maxWidth: "560px",
-                margin: 0,
-              }}
-            >
-              We create scroll-stopping content that grows your audience. 5-7
-              posts per week across Instagram, Facebook, LinkedIn &amp; more.
-            </p>
+        {/* Bottom row — subcopy left + CTA arrow right */}
+        <div
+          className="hero-bottom-row"
+          style={{
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "space-between",
+            gap: "32px",
+            marginTop: "clamp(16px, 2vw, 28px)",
+            flexWrap: "wrap",
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "var(--font-jakarta), 'Plus Jakarta Sans', sans-serif",
+              fontSize: "13px",
+              fontWeight: 300,
+              color: "#9999a6",
+              textTransform: "uppercase",
+              letterSpacing: "0.18em",
+              lineHeight: 1.6,
+              maxWidth: "320px",
+              margin: 0,
+            }}
+          >
+            Scroll-stopping social content — 5 to 7 posts per week across Instagram, LinkedIn &amp; more.
+          </p>
 
-            {/* CTAs */}
-            <div
-              className="flex flex-col sm:flex-row items-center lg:items-start lg:justify-start justify-center"
-              style={{ gap: "16px", marginTop: "4px" }}
+          <a
+            href="#portfolio"
+            aria-label="Scroll to portfolio"
+            className="hero-arrow"
+            style={{
+              width: "72px",
+              height: "72px",
+              borderRadius: "50%",
+              border: "1px solid rgba(255,255,255,0.25)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "white",
+              textDecoration: "none",
+              transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
+              flexShrink: 0,
+            }}
+          >
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ animation: "hero-arrow-bounce 2s ease-in-out infinite" }}
             >
-              <a
-                href="#portfolio"
-                className="btn-gradient"
-                style={{
-                  color: "white",
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  padding: "14px 32px",
-                  borderRadius: "10px",
-                  display: "inline-block",
-                }}
-              >
-                View Our Work
-              </a>
-              <a
-                href="mailto:hello@socialpulse.media?subject=Book%20a%20Call"
-                className="btn-ghost"
-                style={{
-                  border: "1px solid #1a1a2e",
-                  color: "#bfbfcc",
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  padding: "14px 32px",
-                  borderRadius: "10px",
-                  display: "inline-block",
-                  backgroundColor: "transparent",
-                }}
-              >
-                Book a Call
-              </a>
-            </div>
-
-            {/* Stats */}
-            <div
-              className="grid grid-cols-2 md:grid-cols-4 w-full"
-              style={{ gap: "16px", marginTop: "20px" }}
-            >
-              {stats.map((stat) => (
-                <div
-                  key={stat.label}
-                  className="flex flex-col items-center justify-center card-hover"
-                  style={{
-                    backgroundColor: "#0f0f1a",
-                    border: "1px solid #1a1a2e",
-                    borderRadius: "14px",
-                    padding: "22px 12px",
-                    gap: "6px",
-                  }}
-                >
-                  <span
-                    className="gradient-text"
-                    style={{
-                      fontSize: "30px",
-                      fontWeight: 700,
-                      lineHeight: 1,
-                    }}
-                  >
-                    {stat.value}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: "13px",
-                      color: "#9999a6",
-                      textAlign: "center",
-                      lineHeight: 1.3,
-                    }}
-                  >
-                    {stat.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <polyline points="5 12 12 19 19 12" />
+            </svg>
+          </a>
         </div>
       </div>
 
+      <style>{`
+        @keyframes hero-orb-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-20px); }
+        }
+        @keyframes hero-arrow-bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(4px); }
+        }
+        .hero-arrow:hover {
+          background: white;
+          color: #07070e;
+          border-color: white;
+        }
+      `}</style>
     </section>
   );
 }

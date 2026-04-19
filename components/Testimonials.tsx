@@ -124,7 +124,7 @@ export default function Testimonials() {
     <section
       style={{
         backgroundColor: "#07070e",
-        padding: "100px clamp(24px, 6vw, 120px)",
+        padding: "72px clamp(24px, 6vw, 120px)",
       }}
     >
       <div
@@ -145,16 +145,10 @@ export default function Testimonials() {
             Client Love
           </span>
           <h2
-            style={{
-              fontSize: "clamp(32px, 4.5vw, 48px)",
-              fontWeight: 700,
-              color: "white",
-              lineHeight: 1.05,
-              letterSpacing: "-0.03em",
-              margin: 0,
-            }}
+            className="display-heading"
+            style={{ fontSize: "clamp(48px, 7vw, 88px)" }}
           >
-            What Our Clients <span className="gradient-text">Say</span>
+            What Our Clients <span className="accent">Say</span>
           </h2>
           <p
             style={{
@@ -191,7 +185,7 @@ export default function Testimonials() {
           <div
             style={{
               width: "100%",
-              maxWidth: "720px",
+              maxWidth: "640px",
               position: "relative",
               overflow: "hidden",
               borderRadius: "22px",

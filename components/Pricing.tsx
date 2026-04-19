@@ -461,7 +461,7 @@ export default function Pricing() {
       id="pricing"
       style={{
         backgroundColor: "#07070e",
-        padding: "96px clamp(24px, 6vw, 120px)",
+        padding: "72px clamp(24px, 6vw, 120px)",
       }}
     >
       <div className="mx-auto" style={{ maxWidth: "1280px" }}>
@@ -482,15 +482,10 @@ export default function Pricing() {
             Pricing
           </span>
           <h2
-            style={{
-              fontSize: "clamp(32px, 4vw, 48px)",
-              fontWeight: 700,
-              letterSpacing: "-0.03em",
-              color: "white",
-              margin: 0,
-            }}
+            className="display-heading"
+            style={{ fontSize: "clamp(48px, 7vw, 88px)" }}
           >
-            Simple, Transparent Pricing
+            Simple, <span className="accent">Transparent</span> Pricing
           </h2>
           <p style={{ fontSize: "16px", color: "#8a8a96", maxWidth: "480px", margin: 0 }}>
             Click any card to see full details. No contracts. Cancel anytime.
@@ -502,7 +497,7 @@ export default function Pricing() {
           className="grid grid-cols-1 md:grid-cols-3 justify-items-center"
           style={{
             gap: "0px",
-            alignItems: "center",
+            alignItems: "stretch",
             perspective: "1800px",
             perspectiveOrigin: "center center",
           }}

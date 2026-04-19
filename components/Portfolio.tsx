@@ -162,11 +162,11 @@ export default function Portfolio() {
         id="portfolio"
         style={{
           backgroundColor: "#07070e",
-          padding: "100px 0",
+          padding: "72px 0",
           overflow: "hidden",
         }}
       >
-        <div className="mx-auto flex flex-col" style={{ maxWidth: "1280px", gap: "56px" }}>
+        <div className="mx-auto flex flex-col" style={{ maxWidth: "1280px", gap: "36px" }}>
           <div
             className="flex flex-col items-center text-center"
             style={{ gap: "14px", padding: "0 clamp(24px, 6vw, 120px)" }}
@@ -183,16 +183,10 @@ export default function Portfolio() {
               Our Work
             </span>
             <h2
-              style={{
-                fontSize: "clamp(32px, 4.5vw, 48px)",
-                fontWeight: 700,
-                color: "white",
-                lineHeight: 1.05,
-                letterSpacing: "-0.03em",
-                margin: 0,
-              }}
+              className="display-heading"
+              style={{ fontSize: "clamp(48px, 7vw, 88px)" }}
             >
-              Content That <span className="gradient-text">Converts</span>
+              Selected <span className="accent">Work</span>
             </h2>
             <p
               style={{
@@ -203,7 +197,7 @@ export default function Portfolio() {
                 maxWidth: "520px",
               }}
             >
-              LinkedIn thought-leadership that turns expertise into inbound.
+              Real campaigns from the brands we partner with every week.
             </p>
           </div>
         </div>
@@ -222,7 +216,7 @@ export default function Portfolio() {
             className="marquee-track"
             style={{
               display: "flex",
-              gap: "24px",
+              gap: "16px",
               width: "max-content",
               animation: `marquee ${portfolioItems.length * 8}s linear infinite`,
             }}
@@ -234,7 +228,7 @@ export default function Portfolio() {
                 onClick={() => setLightbox(item)}
                 style={{
                   flex: "0 0 auto",
-                  width: "clamp(420px, 46vw, 560px)",
+                  width: "clamp(320px, 32vw, 420px)",
                   borderRadius: "18px",
                   overflow: "hidden",
                   cursor: "pointer",

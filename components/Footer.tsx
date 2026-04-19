@@ -4,10 +4,13 @@ const footerSections: { heading: string; links: FooterLink[] }[] = [
   {
     heading: "Services",
     links: [
-      { label: "Instagram Posts" },
-      { label: "Carousels" },
-      { label: "Reels" },
-      { label: "LinkedIn Content" },
+      { label: "Feed Posts", href: "#services" },
+      { label: "Carousels", href: "#services" },
+      { label: "Reels & Shorts", href: "#services" },
+      { label: "LinkedIn", href: "#services" },
+      { label: "Paid Social Ads", href: "#services" },
+      { label: "Community", href: "#services" },
+      { label: "Strategy", href: "#services" },
     ],
   },
   {

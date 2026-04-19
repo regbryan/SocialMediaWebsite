@@ -99,7 +99,7 @@ const services: Service[] = [
     tagline: "Stop the scroll",
     description:
       "Branded static posts and stories that feel consistent but never boring. Custom templates, captions, hashtag strategy.",
-    image: "/portfolio/blitz-signature.png",
+    image: "/portfolio/v5_03_pet_hair.png",
     stat: { value: "5–7", label: "posts / week" },
     tint: "rgba(192,132,252,0.28)",
     features: [
@@ -117,7 +117,7 @@ const services: Service[] = [
     tagline: "Teach, don't sell",
     description:
       "Swipeable educational decks that drive saves, shares, and follows.",
-    image: "/portfolio/carousel-5things.png",
+    image: "/portfolio/v1_01_bright_canary_explainer.png",
     stat: { value: "3x", label: "save rate" },
     tint: "rgba(255,158,109,0.28)",
     features: [
@@ -135,7 +135,7 @@ const services: Service[] = [
     tagline: "Built for reach",
     description:
       "Trend-aware short video with scripting, editing, and posting handled end-to-end.",
-    image: "/portfolio/reel-pantry.png",
+    image: "/portfolio/v6_07_mothers_day.png",
     stat: { value: "10M+", label: "views driven" },
     tint: "rgba(236,72,153,0.28)",
     features: [
@@ -153,7 +153,7 @@ const services: Service[] = [
     tagline: "Authority at scale",
     description:
       "Thought-leadership posts that build trust and drive inbound opportunities.",
-    image: "/portfolio/doug-founder.png",
+    image: "/portfolio/v1_13_referral.png",
     stat: { value: "4x", label: "inbound leads" },
     tint: "rgba(59,129,255,0.28)",
     features: [
@@ -164,24 +164,6 @@ const services: Service[] = [
       "Inbound opportunity tracking",
     ],
     cta: "Book LinkedIn",
-  },
-  {
-    icon: "grid",
-    title: "Static Campaigns",
-    tagline: "Launch windows",
-    description:
-      "Cohesive visual campaigns for product drops, seasonal promos, and brand moments.",
-    image: "/portfolio/riverside-drop.png",
-    stat: { value: "100%", label: "on-brand" },
-    tint: "rgba(102,217,239,0.28)",
-    features: [
-      "Launch arc planning (pre / drop / post)",
-      "Cohesive visual system",
-      "Story sequence & countdown assets",
-      "Paid-ready creative variants",
-      "Performance tracking per campaign",
-    ],
-    cta: "Book a Campaign",
   },
   {
     icon: "target",
@@ -200,24 +182,6 @@ const services: Service[] = [
       "Transparent ROAS reporting",
     ],
     cta: "Book Paid Ads",
-  },
-  {
-    icon: "mail",
-    title: "Email & SMS",
-    tagline: "Own your audience",
-    description:
-      "Flows, broadcasts, and lifecycle automations that turn followers into repeat buyers.",
-    image: "/portfolio/omega-credit.png",
-    stat: { value: "38%", label: "open rate" },
-    tint: "rgba(251,191,36,0.28)",
-    features: [
-      "Welcome, browse, cart, post-purchase flows",
-      "Weekly broadcast calendar",
-      "Segmented list strategy",
-      "SMS + email integration",
-      "Revenue-per-email tracking",
-    ],
-    cta: "Book Email / SMS",
   },
   {
     icon: "chat",
@@ -243,7 +207,7 @@ const services: Service[] = [
     tagline: "Built on data",
     description:
       "Positioning, content pillars, and a 90-day roadmap so every post actually ladders to a goal.",
-    image: "/portfolio/iec-summer.png",
+    image: "/portfolio/v2_02_myth_20pct.png",
     stat: { value: "90", label: "day plans" },
     tint: "rgba(139,92,255,0.32)",
     features: [
@@ -257,16 +221,14 @@ const services: Service[] = [
   },
 ];
 
-// Bow-curve tunnel (lightswind pattern): all cards same scale (0.85) and
-// dimmed by default, tilted inward via asymmetric rotation steps.
-// Hover/active: flatten + scale to 1.1 + translateZ 50 + full brightness.
-// Rotation lookup per |delta| (signed by side):
-//   0→0°, 1→15°, 2→30°, 3→40°, 4→50°
+// Bow-tie tunnel (lightswind reference). Rotation per |delta|: [0, 15, 30, 40].
+// Default: rotateY(±angle) scale(0.85) brightness(0.6).
+// Focused: rotateY(0) scale(1.1) translateZ(50) brightness(1).
 function arcRotation(delta: number, focused: boolean): string {
   if (focused) {
     return "rotateY(0deg) scale(1.1) translateZ(50px)";
   }
-  const rotationByAbs = [0, 15, 30, 40, 50];
+  const rotationByAbs = [0, 25, 50, 70];
   const absD = Math.min(Math.abs(delta), rotationByAbs.length - 1);
   const magnitude = rotationByAbs[absD];
   const rotY = delta < 0 ? magnitude : -magnitude;
@@ -349,9 +311,8 @@ export default function Services() {
     <section
       id="services"
       style={{
-        backgroundColor: "#090912",
-        padding: "110px 0",
-        overflow: "hidden",
+        background: "radial-gradient(ellipse 60% 55% at 50% 50%, #23233a 0%, #121220 55%, #07070e 100%)",
+        padding: "72px 0",
       }}
     >
       <div
@@ -371,16 +332,10 @@ export default function Services() {
             What We Do
           </span>
           <h2
-            style={{
-              fontSize: "clamp(32px, 4vw, 44px)",
-              fontWeight: 700,
-              color: "white",
-              lineHeight: 1.1,
-              letterSpacing: "-0.02em",
-              margin: 0,
-            }}
+            className="display-heading"
+            style={{ fontSize: "clamp(48px, 7vw, 88px)" }}
           >
-            Services Built for Growth
+            Services Built <span className="accent">for Growth</span>
           </h2>
         </div>
       </div>
@@ -388,9 +343,8 @@ export default function Services() {
       {/* Fixed-arc tunnel — all cards visible, each rotated toward center */}
       <div
         style={{
-          margin: "56px auto 0",
-          padding: "0 clamp(16px, 3vw, 40px)",
-          perspective: "600px",
+          margin: "36px auto 0",
+          perspective: "1200px",
           perspectiveOrigin: "50% 50%",
         }}
       >
@@ -399,9 +353,9 @@ export default function Services() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            gap: "0px",
+            gap: "4px",
             transformStyle: "preserve-3d",
-            minHeight: "460px",
+            minHeight: "420px",
             pointerEvents: "none",
           }}
         >
@@ -422,8 +376,8 @@ export default function Services() {
                 onMouseLeave={() => setHoveredIdx(null)}
                 style={{
                   flex: "0 0 auto",
-                  width: "150px",
-                  height: "150px",
+                  width: "176px",
+                  height: "220px",
                   pointerEvents: "auto",
                   transform,
                   transformOrigin: "center center",
@@ -452,7 +406,7 @@ export default function Services() {
               >
                   {/* Background image — contain to show full design, no crop */}
                   <div style={{ position: "absolute", inset: 0, zIndex: 0, background: "#0a0a14" }}>
-                    <Image src={s.image} alt={s.title} fill sizes="340px" style={{ objectFit: "contain", objectPosition: "center" }} priority={i < 3} />
+                    <Image src={s.image} alt={s.title} fill sizes="250px" style={{ objectFit: "contain", objectPosition: "center" }} priority={i < 3} />
                   </div>
 
                   {/* Subtle tint for brand cohesion */}

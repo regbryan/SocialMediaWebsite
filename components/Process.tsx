@@ -60,12 +60,12 @@ export default function Process() {
       id="process"
       style={{
         backgroundColor: "#090912",
-        padding: "100px clamp(24px, 6vw, 120px)",
+        padding: "72px clamp(24px, 6vw, 120px)",
       }}
     >
       <div
         className="mx-auto flex flex-col"
-        style={{ maxWidth: "1280px", gap: "56px" }}
+        style={{ maxWidth: "1280px", gap: "36px" }}
       >
         {/* Header */}
         <div
@@ -84,16 +84,10 @@ export default function Process() {
             How We Work
           </span>
           <h2
-            style={{
-              fontSize: "clamp(32px, 4.5vw, 48px)",
-              fontWeight: 700,
-              color: "white",
-              lineHeight: 1.05,
-              letterSpacing: "-0.03em",
-              margin: 0,
-            }}
+            className="display-heading"
+            style={{ fontSize: "clamp(44px, 6vw, 80px)" }}
           >
-            From zero to <span className="gradient-text">consistent</span> in 14 days
+            From zero to <span className="accent">consistent</span> in 14 days
           </h2>
           <p
             style={{
