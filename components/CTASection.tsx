@@ -1,6 +1,6 @@
 "use client";
 
-import { ShinyButton } from "@/components/ui/shiny-button";
+import ContactForm from "@/components/ContactForm";
 
 export default function CTASection() {
   return (
@@ -40,19 +40,8 @@ export default function CTASection() {
             Let&apos;s build a content strategy that grows your brand. Book a free
             consultation and see what we can do for you.
           </p>
-          <div
-            className="flex flex-col sm:flex-row"
-            style={{ gap: "16px", marginTop: "16px" }}
-          >
-            <ShinyButton onClick={() => (window.location.href = "mailto:hello@socialpulse.media")}>
-              Book Free Consultation
-            </ShinyButton>
-            <ShinyButton
-              variant="secondary"
-              onClick={() => (window.location.hash = "#pricing")}
-            >
-              See Pricing
-            </ShinyButton>
+          <div style={{ width: "100%", maxWidth: "560px", marginTop: "12px" }}>
+            <ContactForm />
           </div>
         </div>
       </div>
