@@ -1,6 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabaseAdmin } from "../../../lib/supabase-admin";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 
 type BrandKit = {
   id: string;
@@ -107,31 +118,38 @@ export default async function BrandKitDetail({
       <div>
         <Link
           href="/dashboard"
-          className="text-sm text-neutral-500 hover:text-neutral-900"
+          className="text-sm text-muted-foreground hover:text-foreground"
         >
           ← All brand kits
         </Link>
-        <div className="mt-2 flex items-start justify-between gap-6">
+        <div className="mt-4 flex flex-wrap items-start justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-semibold">{k.name}</h1>
+            <h1 className="text-4xl font-semibold tracking-tight">{k.name}</h1>
             {k.tagline && (
-              <p className="mt-1 text-neutral-600">{k.tagline}</p>
+              <p className="mt-2 max-w-xl text-muted-foreground">{k.tagline}</p>
             )}
-            <div className="mt-3 flex flex-wrap gap-2 text-xs">
-              <Pill>{k.primary_platform}</Pill>
-              {k.ig_handle && <Pill>@{k.ig_handle}</Pill>}
-              {k.hq_location && <Pill>{k.hq_location}</Pill>}
-              {k.ig_is_business && <Pill>business</Pill>}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Badge variant="secondary" className="capitalize">
+                {k.primary_platform}
+              </Badge>
+              {k.ig_handle && <Badge variant="outline">@{k.ig_handle}</Badge>}
+              {k.hq_location && <Badge variant="outline">{k.hq_location}</Badge>}
+              {k.ig_is_business && <Badge>business</Badge>}
             </div>
           </div>
           {k.colors?.primary && (
-            <div className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 ring-1 ring-neutral-200">
-              <span
-                className="size-6 rounded"
-                style={{ background: k.colors.primary }}
-              />
-              <code className="text-xs">{k.colors.primary}</code>
-            </div>
+            <Card className="px-4 py-3">
+              <div className="flex items-center gap-3">
+                <span
+                  className="size-8 rounded-md ring-1 ring-border"
+                  style={{ background: k.colors.primary }}
+                />
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground">Primary</span>
+                  <code className="text-xs font-medium">{k.colors.primary}</code>
+                </div>
+              </div>
+            </Card>
           )}
         </div>
       </div>
@@ -139,99 +157,118 @@ export default async function BrandKitDetail({
       {(k.positioning || k.description) && (
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {k.positioning && (
-            <Card label="Positioning">{k.positioning}</Card>
+            <Card>
+              <CardHeader>
+                <CardDescription className="uppercase tracking-wide">
+                  Positioning
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm leading-relaxed text-foreground/90">
+                {k.positioning}
+              </CardContent>
+            </Card>
           )}
           {k.description && (
-            <Card label="Description">{k.description}</Card>
+            <Card>
+              <CardHeader>
+                <CardDescription className="uppercase tracking-wide">
+                  Description
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm leading-relaxed text-foreground/90">
+                {k.description}
+              </CardContent>
+            </Card>
           )}
         </section>
       )}
 
       <section>
-        <h2 className="text-lg font-semibold">Follower comparison</h2>
-        <p className="text-sm text-neutral-600">
-          Followers across {k.ig_handle ?? "this brand"} and its auto-discovered
-          competitors.
-        </p>
-        <div className="mt-4 space-y-2 rounded-xl bg-white p-4 ring-1 ring-neutral-200">
-          <Bar
-            label={k.ig_handle ? `@${k.ig_handle} (you)` : k.name}
-            value={k.ig_follower_count ?? 0}
-            max={maxFollowers}
-            highlight
-          />
-          {competitorHandles.length === 0 ? (
-            <p className="pt-2 text-sm text-neutral-500">
-              No competitors discovered yet. Deploy the IG sidecar and re-run
-              submit to populate.
-            </p>
-          ) : (
-            competitorHandles.map((h) => {
-              const match = competitors.find((c) => c.handle === h);
-              return (
-                <Bar
-                  key={h}
-                  label={`@${h}`}
-                  value={match?.follower_count ?? 0}
-                  max={maxFollowers}
-                  muted={!match}
-                  suffix={
-                    match
-                      ? null
-                      : "not fetched"
-                  }
-                />
-              );
-            })
-          )}
+        <div className="mb-3 flex items-baseline justify-between gap-4">
+          <h2 className="text-xl font-semibold tracking-tight">Follower comparison</h2>
+          <span className="text-xs text-muted-foreground">
+            {competitors.length}/{competitorHandles.length} competitors hydrated
+          </span>
         </div>
+        <Card>
+          <CardContent className="space-y-4 py-5">
+            <Bar
+              label={k.ig_handle ? `@${k.ig_handle}` : k.name}
+              sublabel="you"
+              value={k.ig_follower_count ?? 0}
+              max={maxFollowers}
+              highlight
+            />
+            {competitorHandles.length === 0 ? (
+              <p className="pt-2 text-sm text-muted-foreground">
+                No competitors discovered yet. Deploy the IG sidecar and re-run
+                submit to populate.
+              </p>
+            ) : (
+              competitorHandles.map((h) => {
+                const match = competitors.find((c) => c.handle === h);
+                return (
+                  <Bar
+                    key={h}
+                    label={`@${h}`}
+                    sublabel={match?.full_name ?? undefined}
+                    value={match?.follower_count ?? 0}
+                    max={maxFollowers}
+                    muted={!match}
+                    suffix={match ? null : "not fetched"}
+                  />
+                );
+              })
+            )}
+          </CardContent>
+        </Card>
       </section>
 
       {competitors.length > 0 && (
         <section>
-          <h2 className="text-lg font-semibold">Competitor profiles</h2>
-          <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+          <h2 className="mb-3 text-xl font-semibold tracking-tight">
+            Competitor profiles
+          </h2>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
             {competitors.map((c) => (
-              <div
-                key={c.handle}
-                className="rounded-xl bg-white p-4 ring-1 ring-neutral-200"
-              >
-                <div className="flex items-center gap-3">
-                  {c.profile_pic_url ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
-                      src={c.profile_pic_url}
-                      alt=""
-                      className="size-10 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="size-10 rounded-full bg-neutral-200" />
-                  )}
-                  <div>
-                    <div className="font-medium">@{c.handle}</div>
-                    {c.full_name && (
-                      <div className="text-xs text-neutral-500">
-                        {c.full_name}
-                      </div>
-                    )}
+              <Card key={c.handle} className="transition hover:border-foreground/30">
+                <CardContent className="py-5">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="size-11">
+                      {c.profile_pic_url ? (
+                        <AvatarImage src={c.profile_pic_url} alt={c.handle} />
+                      ) : null}
+                      <AvatarFallback className="text-xs">
+                        {c.handle.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <div className="truncate font-medium">@{c.handle}</div>
+                      {c.full_name && (
+                        <div className="truncate text-xs text-muted-foreground">
+                          {c.full_name}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="mt-3 flex gap-4 text-xs text-neutral-600">
-                  <Stat
-                    label="followers"
-                    value={c.follower_count?.toLocaleString() ?? "—"}
-                  />
-                  <Stat
-                    label="posts"
-                    value={c.post_count?.toLocaleString() ?? "—"}
-                  />
-                </div>
-                {c.biography && (
-                  <p className="mt-2 line-clamp-3 text-xs text-neutral-600">
-                    {c.biography}
-                  </p>
-                )}
-              </div>
+                  <Separator className="my-4" />
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <MiniStat
+                      label="followers"
+                      value={c.follower_count?.toLocaleString() ?? "—"}
+                    />
+                    <MiniStat
+                      label="posts"
+                      value={c.post_count?.toLocaleString() ?? "—"}
+                    />
+                  </div>
+                  {c.biography && (
+                    <p className="mt-3 line-clamp-3 text-xs text-muted-foreground">
+                      {c.biography}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
             ))}
           </div>
         </section>
@@ -239,8 +276,8 @@ export default async function BrandKitDetail({
 
       {posts.length > 0 && (
         <section>
-          <h2 className="text-lg font-semibold">Top posts</h2>
-          <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+          <h2 className="mb-3 text-xl font-semibold tracking-tight">Top posts</h2>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
             {posts.map((p, i) => {
               const permalink = p.meta?.permalink;
               return (
@@ -249,15 +286,15 @@ export default async function BrandKitDetail({
                   href={permalink ?? p.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="group block overflow-hidden rounded-xl bg-neutral-100 ring-1 ring-neutral-200 hover:ring-neutral-400"
+                  className="group block overflow-hidden rounded-xl border border-border bg-card transition hover:border-foreground/40"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={p.url}
                     alt={p.meta?.caption ?? ""}
-                    className="aspect-square w-full object-cover transition group-hover:scale-[1.02]"
+                    className="aspect-square w-full object-cover transition group-hover:scale-[1.03]"
                   />
-                  <div className="flex justify-between p-2 text-xs text-neutral-600">
+                  <div className="flex justify-between px-3 py-2 text-xs text-muted-foreground">
                     <span>♥ {p.meta?.like_count?.toLocaleString() ?? "—"}</span>
                     <span>
                       💬 {p.meta?.comment_count?.toLocaleString() ?? "—"}
@@ -272,55 +309,49 @@ export default async function BrandKitDetail({
 
       {k.content_pillars && k.content_pillars.length > 0 && (
         <section>
-          <h2 className="text-lg font-semibold">Content mix</h2>
-          <div className="mt-3 flex h-6 w-full overflow-hidden rounded-full ring-1 ring-neutral-200">
-            {k.content_pillars.map((p, i) => (
-              <div
-                key={p.name + i}
-                title={`${p.name} · ${p.pct}%`}
-                className="flex items-center justify-center text-xs text-white"
-                style={{
-                  width: `${p.pct}%`,
-                  background: `hsl(${(i * 67) % 360} 60% 45%)`,
-                }}
-              >
-                {p.pct >= 10 ? p.name : ""}
+          <h2 className="mb-3 text-xl font-semibold tracking-tight">Content mix</h2>
+          <Card>
+            <CardContent className="py-5">
+              <div className="flex h-8 w-full overflow-hidden rounded-md ring-1 ring-border">
+                {k.content_pillars.map((p, i) => (
+                  <div
+                    key={p.name + i}
+                    title={`${p.name} · ${p.pct}%`}
+                    className="flex items-center justify-center text-xs font-medium text-white"
+                    style={{
+                      width: `${p.pct}%`,
+                      background: `hsl(${(i * 67 + 250) % 360} 55% 50%)`,
+                    }}
+                  >
+                    {p.pct >= 10 ? p.name : ""}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {k.content_pillars.map((p, i) => (
+                  <div
+                    key={p.name + i}
+                    className="flex items-center gap-2 text-xs text-muted-foreground"
+                  >
+                    <span
+                      className="size-2 rounded-sm"
+                      style={{ background: `hsl(${(i * 67 + 250) % 360} 55% 50%)` }}
+                    />
+                    {p.name} · {p.pct}%
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </section>
       )}
     </div>
   );
 }
 
-function Pill({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="rounded-full bg-white px-2 py-0.5 text-neutral-700 ring-1 ring-neutral-300">
-      {children}
-    </span>
-  );
-}
-
-function Card({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-xl bg-white p-4 ring-1 ring-neutral-200">
-      <div className="text-xs uppercase tracking-wide text-neutral-500">
-        {label}
-      </div>
-      <div className="mt-1 text-sm text-neutral-800">{children}</div>
-    </div>
-  );
-}
-
 function Bar({
   label,
+  sublabel,
   value,
   max,
   highlight,
@@ -328,43 +359,47 @@ function Bar({
   suffix,
 }: {
   label: string;
+  sublabel?: string;
   value: number;
   max: number;
   highlight?: boolean;
   muted?: boolean;
   suffix?: string | null;
 }) {
-  const pct = Math.max(2, (value / max) * 100);
+  const pct = Math.max(1.5, (value / max) * 100);
   return (
-    <div className="grid grid-cols-[180px_1fr_90px] items-center gap-3 text-sm">
-      <div className={"truncate " + (highlight ? "font-semibold" : "")}>
-        {label}
+    <div className="grid grid-cols-[200px_1fr_100px] items-center gap-4 text-sm">
+      <div className="min-w-0">
+        <div className={"truncate " + (highlight ? "font-semibold" : "")}>
+          {label}
+        </div>
+        {sublabel && (
+          <div className="truncate text-xs text-muted-foreground">{sublabel}</div>
+        )}
       </div>
-      <div className="h-5 w-full overflow-hidden rounded-full bg-neutral-100">
-        <div
-          className={
-            "h-full rounded-full " +
-            (highlight
-              ? "bg-neutral-900"
-              : muted
-                ? "bg-neutral-300"
-                : "bg-neutral-500")
-          }
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <div className="text-right text-xs tabular-nums text-neutral-600">
+      <Progress
+        value={pct}
+        className={
+          "h-2.5 " +
+          (highlight
+            ? "[&>div]:bg-foreground"
+            : muted
+              ? "[&>div]:bg-muted-foreground/30"
+              : "[&>div]:bg-muted-foreground/70")
+        }
+      />
+      <div className="text-right text-xs tabular-nums text-muted-foreground">
         {suffix ?? value.toLocaleString()}
       </div>
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-xs text-neutral-400">{label}</div>
-      <div className="font-medium text-neutral-900">{value}</div>
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="font-medium tabular-nums">{value}</div>
     </div>
   );
 }

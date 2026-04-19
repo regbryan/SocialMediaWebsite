@@ -1,5 +1,22 @@
 import Link from "next/link";
 import { supabaseAdmin } from "../../lib/supabase-admin";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type Row = {
   slug: string;
@@ -24,90 +41,114 @@ export default async function BrandKitsList() {
 
   if (error) {
     return (
-      <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700">
-        Failed to load brand kits: {error.message}
-      </div>
+      <Card className="border-destructive/40 bg-destructive/10">
+        <CardHeader>
+          <CardTitle className="text-destructive">Failed to load brand kits</CardTitle>
+          <CardDescription className="text-destructive/80">{error.message}</CardDescription>
+        </CardHeader>
+      </Card>
     );
   }
 
   const rows = (data ?? []) as Row[];
+  const totalFollowers = rows.reduce((acc, r) => acc + (r.ig_follower_count ?? 0), 0);
+  const complete = rows.filter((r) => r.onboarding_status === "complete").length;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Brand kits</h1>
-        <p className="text-sm text-neutral-600">
-          {rows.length} kit{rows.length === 1 ? "" : "s"}. Click a row to see
-          comparison.
-        </p>
+    <div className="space-y-8">
+      <div className="flex items-end justify-between gap-6">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">Brand kits</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {rows.length} kit{rows.length === 1 ? "" : "s"} across all accounts. Click a row to open comparison.
+          </p>
+        </div>
+        <Link href="/onboarding/basics" className={buttonVariants()}>
+          + New kit
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Stat label="Total kits" value={rows.length.toLocaleString()} />
+        <Stat label="Completed" value={`${complete} / ${rows.length || 0}`} />
+        <Stat label="Combined reach" value={totalFollowers.toLocaleString()} />
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-xl bg-white p-8 text-center ring-1 ring-neutral-200">
-          <p className="text-neutral-600">No brand kits yet.</p>
-          <Link
-            href="/onboarding/basics"
-            className="mt-3 inline-block rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
-          >
-            Start onboarding
-          </Link>
-        </div>
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+            <p className="text-muted-foreground">No brand kits yet.</p>
+            <Link href="/onboarding/basics" className={buttonVariants()}>
+              Start onboarding
+            </Link>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="overflow-hidden rounded-xl bg-white ring-1 ring-neutral-200">
-          <table className="w-full text-sm">
-            <thead className="bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
-              <tr>
-                <th className="px-4 py-3">Brand</th>
-                <th className="px-4 py-3">Platform</th>
-                <th className="px-4 py-3">Handle</th>
-                <th className="px-4 py-3 text-right">Followers</th>
-                <th className="px-4 py-3 text-right">Competitors</th>
-                <th className="px-4 py-3">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-200">
+        <Card className="overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Brand</TableHead>
+                <TableHead>Platform</TableHead>
+                <TableHead>Handle</TableHead>
+                <TableHead className="text-right">Followers</TableHead>
+                <TableHead className="text-right">Competitors</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {rows.map((r) => (
-                <tr key={r.slug} className="hover:bg-neutral-50">
-                  <td className="px-4 py-3">
+                <TableRow key={r.slug} className="group">
+                  <TableCell>
                     <Link
                       href={`/dashboard/${r.slug}`}
-                      className="font-medium text-neutral-900 hover:underline"
+                      className="font-medium text-foreground hover:underline"
                     >
                       {r.name}
                     </Link>
-                  </td>
-                  <td className="px-4 py-3 capitalize text-neutral-600">
+                  </TableCell>
+                  <TableCell className="capitalize text-muted-foreground">
                     {r.primary_platform}
-                  </td>
-                  <td className="px-4 py-3 text-neutral-600">
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
                     {r.ig_handle ? `@${r.ig_handle}` : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-neutral-700">
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
                     {r.ig_follower_count != null
                       ? r.ig_follower_count.toLocaleString()
                       : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-neutral-700">
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
                     {r.competitor_handles?.length ?? 0}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={
-                        "rounded-full px-2 py-0.5 text-xs ring-1 " +
-                        (r.onboarding_status === "complete"
-                          ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-                          : "bg-amber-50 text-amber-700 ring-amber-200")
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        r.onboarding_status === "complete" ? "default" : "secondary"
                       }
                     >
                       {r.onboarding_status}
-                    </span>
-                  </td>
-                </tr>
+                    </Badge>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </Card>
       )}
     </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <Card>
+      <CardContent className="py-5">
+        <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          {label}
+        </div>
+        <div className="mt-1 text-2xl font-semibold tabular-nums">{value}</div>
+      </CardContent>
+    </Card>
   );
 }
