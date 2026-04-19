@@ -91,26 +91,60 @@ body {
 }
 
 /* Gradient button with glow */
-.btn-gradient {
-  background: linear-gradient(120deg, #8b5cff, #3b81ff);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.2s ease;
-  box-shadow: 0 4px 24px rgba(139, 92, 255, 0.25);
+/* Editorial buttons — brutalist, no gradients */
+/* Legacy button classes — kept minimal; use ShinyButton component for primary CTAs */
+.btn-gradient,
+.btn-ghost {
+  background: transparent;
+  color: white;
+  text-decoration: none;
+  display: inline-block;
 }
-.btn-gradient:hover {
+
+/* ──────────────── ShinyButton — liquid-glass CTA ──────────────── */
+.sp-shiny {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 22px;
+  font-family: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  color: white;
+  background: linear-gradient(180deg, #1e1838 0%, #0c0a16 100%);
+  border: 1px solid rgba(139,92,255,0.35);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.3s ease, border-color 0.25s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    0 6px 20px -10px rgba(139,92,255,0.4);
+}
+.sp-shiny:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 32px rgba(139, 92, 255, 0.45);
+  border-color: rgba(192,132,252,0.65);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    0 10px 28px -10px rgba(139,92,255,0.6);
 }
-.btn-gradient:active {
+.sp-shiny:active {
   transform: translateY(0);
 }
 
-/* Ghost button */
-.btn-ghost {
-  transition: all 0.25s ease;
+.sp-shiny--secondary {
+  background: rgba(255,255,255,0.02);
+  border-color: rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.85);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
 }
-.btn-ghost:hover {
-  background-color: rgba(255, 255, 255, 0.04);
-  border-color: rgba(139, 92, 255, 0.4) !important;
+.sp-shiny--secondary:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.3);
+  color: white;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
 }
 
 /* Card hover */

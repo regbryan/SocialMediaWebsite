@@ -1,3 +1,7 @@
+"use client";
+
+import { ShinyButton } from "@/components/ui/shiny-button";
+
 export default function CTASection() {
   return (
     <section
@@ -40,35 +44,15 @@ export default function CTASection() {
             className="flex flex-col sm:flex-row"
             style={{ gap: "16px", marginTop: "16px" }}
           >
-            <a
-              href="mailto:hello@socialpulse.media"
-              className="btn-gradient"
-              style={{
-                color: "white",
-                fontSize: "16px",
-                fontWeight: 600,
-                padding: "14px 32px",
-                borderRadius: "10px",
-                display: "inline-block",
-              }}
-            >
+            <ShinyButton onClick={() => (window.location.href = "mailto:hello@socialpulse.media")}>
               Book Free Consultation
-            </a>
-            <a
-              href="#pricing"
-              style={{
-                border: "1px solid #1a1a2e",
-                color: "#bfbfcc",
-                fontSize: "16px",
-                fontWeight: 600,
-                padding: "14px 32px",
-                borderRadius: "10px",
-                display: "inline-block",
-                backgroundColor: "transparent",
-              }}
+            </ShinyButton>
+            <ShinyButton
+              variant="secondary"
+              onClick={() => (window.location.hash = "#pricing")}
             >
               See Pricing
-            </a>
+            </ShinyButton>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ShinyButton } from "@/components/ui/shiny-button";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -73,20 +74,9 @@ export default function Navbar() {
         >
           Client Login
         </a>
-        <a
-          href="#contact"
-          className="inline-flex items-center btn-gradient"
-          style={{
-            color: "white",
-            fontSize: "14px",
-            fontWeight: 600,
-            padding: "10px 22px",
-            borderRadius: "8px",
-            textDecoration: "none",
-          }}
-        >
+        <ShinyButton onClick={() => (window.location.hash = "#contact")}>
           Get Started
-        </a>
+        </ShinyButton>
       </div>
 
       {/* Mobile hamburger */}
@@ -181,11 +171,7 @@ export default function Navbar() {
             href="#contact"
             className="btn-gradient"
             style={{
-              color: "white",
-              fontSize: "14px",
-              fontWeight: 600,
-              padding: "12px 24px",
-              borderRadius: "8px",
+              display: "block",
               textAlign: "center",
               textDecoration: "none",
             }}

@@ -570,17 +570,8 @@ export default function Services() {
               <a
                 href={`mailto:hello@socialpulse.media?subject=${encodeURIComponent(services[activeIdx].cta)}`}
                 onClick={(e) => e.stopPropagation()}
-                style={{
-                  padding: "11px 20px",
-                  borderRadius: "10px",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  letterSpacing: "0.02em",
-                  textDecoration: "none",
-                  background: "linear-gradient(135deg, #8b5cff 0%, #3b81ff 100%)",
-                  color: "white",
-                  boxShadow: "0 8px 24px rgba(139,92,255,0.35)",
-                }}
+                className="btn-gradient"
+                style={{ textDecoration: "none" }}
               >
                 {services[activeIdx].cta} →
               </a>

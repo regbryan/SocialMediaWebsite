@@ -416,19 +416,12 @@ function PricingCard({ plan, position }: { plan: Plan; position: number }) {
             <a
               href={plan.href}
               onClick={(e) => e.stopPropagation()}
+              className="btn-gradient"
               style={{
                 display: "block",
                 textAlign: "center",
-                padding: "13px 20px",
                 marginTop: "20px",
-                borderRadius: "11px",
-                fontSize: "14px",
-                fontWeight: 600,
-                letterSpacing: "0.02em",
                 textDecoration: "none",
-                background: "linear-gradient(135deg, #8b5cff 0%, #3b81ff 100%)",
-                color: "white",
-                boxShadow: "0 8px 24px rgba(139,92,255,0.35)",
                 cursor: "pointer",
               }}
             >
