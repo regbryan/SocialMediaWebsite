@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import LogoutButton from "./LogoutButton";
 
 export default function DashboardLayout({
   children,
@@ -32,6 +33,8 @@ export default function DashboardLayout({
             >
               New kit
             </Link>
+            <Separator orientation="vertical" className="mx-1 h-5" />
+            <LogoutButton />
           </nav>
         </div>
       </header>
