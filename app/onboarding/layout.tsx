@@ -1,50 +1,50 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-
-const STEPS = [
-  { href: "/onboarding/basics", label: "Basics", num: 1 },
-  { href: "/onboarding/review", label: "Brand", num: 2 },
-  { href: "/onboarding/voice", label: "Voice", num: 3 },
-  { href: "/onboarding/audience", label: "Audience", num: 4 },
-  { href: "/onboarding/confirm", label: "Confirm", num: 5 },
-];
+import Stepper from "./Stepper";
 
 export default function OnboardingLayout({ children }: { children: ReactNode }) {
   return (
-    <main className="min-h-screen bg-neutral-50 text-neutral-900">
-      <div className="mx-auto max-w-3xl px-6 py-10">
-        <Link
-          href="/"
-          className="text-sm text-neutral-500 hover:text-neutral-900"
-        >
-          ← SocialPulse
-        </Link>
-        <h1 className="mt-2 font-[var(--font-anton)] text-4xl tracking-tight">
-          Brand Kit Setup
-        </h1>
-        <p className="mt-1 text-neutral-600">
-          A few quick steps and we&apos;ll have everything we need to start creating
-          content for you.
-        </p>
+    <div className="dark min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-sm font-semibold tracking-tight"
+          >
+            <span className="inline-block size-2 rounded-full bg-gradient-to-br from-[#b18bff] to-[#3b81ff]" />
+            SocialPulse
+          </Link>
+          <Link
+            href="/dashboard"
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            Cancel
+          </Link>
+        </div>
+      </header>
 
-        <nav className="mt-8 flex items-center gap-2 text-sm">
-          {STEPS.map((s, i) => (
-            <div key={s.href} className="flex items-center gap-2">
-              <span className="flex size-7 items-center justify-center rounded-full bg-neutral-200 text-neutral-700">
-                {s.num}
-              </span>
-              <span className="text-neutral-700">{s.label}</span>
-              {i < STEPS.length - 1 && (
-                <span className="mx-1 text-neutral-300">—</span>
-              )}
-            </div>
-          ))}
-        </nav>
+      <main className="mx-auto max-w-3xl px-6 py-10">
+        <div className="mb-8 space-y-3">
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+            New brand kit
+          </p>
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+            Brand kit setup
+          </h1>
+          <p className="max-w-xl text-sm text-muted-foreground">
+            A few quick steps and we&apos;ll have everything we need to start
+            creating content for you.
+          </p>
+        </div>
 
-        <section className="mt-8 rounded-2xl bg-white p-8 shadow-sm ring-1 ring-neutral-200">
+        <div className="mb-8">
+          <Stepper />
+        </div>
+
+        <section className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm sm:p-8">
           {children}
         </section>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

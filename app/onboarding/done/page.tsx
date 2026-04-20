@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Check } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
 
 export default async function Done({
   searchParams,
@@ -7,18 +9,27 @@ export default async function Done({
 }) {
   const { slug } = await searchParams;
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-semibold">You&apos;re all set</h2>
-      <p className="text-neutral-600">
-        Brand kit <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-sm">{slug}</code> is live.
-        Our team will review and start creating content shortly.
-      </p>
-      <Link
-        href="/"
-        className="inline-block rounded-lg bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-neutral-800"
-      >
-        Back to home
-      </Link>
+    <div className="space-y-8 text-center">
+      <div className="mx-auto flex size-14 items-center justify-center rounded-full border border-border/60 bg-background/40">
+        <Check className="size-6 text-foreground" />
+      </div>
+      <div className="space-y-2">
+        <h2 className="text-xl font-semibold tracking-tight">
+          You&apos;re all set
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Brand kit{" "}
+          <code className="rounded border border-border/60 bg-background/60 px-1.5 py-0.5 font-mono text-xs text-foreground">
+            {slug}
+          </code>{" "}
+          is live. Our team will review and start creating content shortly.
+        </p>
+      </div>
+      <div className="flex justify-center border-t border-border/60 pt-6">
+        <Link href="/" className={buttonVariants({ variant: "default" })}>
+          Back to home
+        </Link>
+      </div>
     </div>
   );
 }

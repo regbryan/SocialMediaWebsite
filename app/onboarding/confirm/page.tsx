@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { slugify, useDraft } from "../../../lib/onboarding-state";
+import { Button } from "@/components/ui/button";
 
 export default function ConfirmStep() {
   const router = useRouter();
@@ -44,15 +45,15 @@ export default function ConfirmStep() {
     : "—";
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h2 className="text-2xl font-semibold">Looks good?</h2>
-        <p className="mt-1 text-sm text-neutral-600">
+    <div className="space-y-8">
+      <header className="space-y-1">
+        <h2 className="text-xl font-semibold tracking-tight">Looks good?</h2>
+        <p className="text-sm text-muted-foreground">
           Here&apos;s what we captured. Submit to create your brand kit.
         </p>
       </header>
 
-      <dl className="divide-y divide-neutral-200 rounded-lg ring-1 ring-neutral-200">
+      <dl className="divide-y divide-border/60 overflow-hidden rounded-lg border border-border/60 bg-background/40">
         <Row label="Platform" value={draft.primaryPlatform} />
         <Row label="Brand name" value={draft.name || "—"} />
         <Row label="Website" value={draft.websiteUrl || "—"} />
@@ -77,10 +78,7 @@ export default function ConfirmStep() {
           }
         />
         <Row label="Pillars" value={pillarSummary} />
-        <Row
-          label="Footer"
-          value={draft.complianceFooter || "—"}
-        />
+        <Row label="Footer" value={draft.complianceFooter || "—"} />
         <Row
           label="Colors"
           value={
@@ -90,7 +88,7 @@ export default function ConfirmStep() {
                   draft.colors[k] ? (
                     <span
                       key={k}
-                      className="size-6 rounded ring-1 ring-neutral-300"
+                      className="size-6 rounded border border-border/60"
                       style={{ background: draft.colors[k] }}
                       title={`${k}: ${draft.colors[k]}`}
                     />
@@ -102,27 +100,24 @@ export default function ConfirmStep() {
       </dl>
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error}
         </p>
       )}
 
-      <div className="flex justify-between pt-2">
-        <button
-          type="button"
+      <div className="flex items-center justify-between border-t border-border/60 pt-6">
+        <Button
+          variant="ghost"
           onClick={() => router.push("/onboarding/audience")}
-          className="text-sm text-neutral-600 hover:text-neutral-900"
         >
           ← Back
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
           onClick={onSubmit}
           disabled={submitting || !draft.name}
-          className="rounded-lg bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
         >
           {submitting ? "Creating…" : "Create brand kit"}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -137,10 +132,10 @@ function Row({
 }) {
   return (
     <div className="flex items-start gap-4 px-4 py-3">
-      <dt className="w-32 shrink-0 text-xs uppercase tracking-wide text-neutral-500">
+      <dt className="w-32 shrink-0 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
         {label}
       </dt>
-      <dd className="flex-1 text-sm">{value}</dd>
+      <dd className="flex-1 text-sm text-foreground">{value}</dd>
     </div>
   );
 }

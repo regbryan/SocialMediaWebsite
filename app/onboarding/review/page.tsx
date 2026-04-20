@@ -2,6 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useDraft } from "../../../lib/onboarding-state";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 export default function ReviewStep() {
   const router = useRouter();
@@ -9,86 +13,112 @@ export default function ReviewStep() {
 
   if (!loaded) return null;
 
+  const colorKeys = ["primary", "secondary", "accent", "bg", "text"] as const;
+
   return (
-    <div className="space-y-6">
-      <header>
-        <h2 className="text-2xl font-semibold">Your brand</h2>
-        <p className="mt-1 text-sm text-neutral-600">
-          Tagline, positioning, and visual identity. Phase 2 will auto-fill
-          these from your site.
+    <div className="space-y-8">
+      <header className="space-y-1">
+        <h2 className="text-xl font-semibold tracking-tight">Your brand</h2>
+        <p className="text-sm text-muted-foreground">
+          Tagline, positioning, and visual identity.
         </p>
       </header>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Input
-          label="Brand name"
-          value={draft.name}
-          onChange={(v) => patch({ name: v })}
-        />
-        <Input
-          label="Tagline"
-          value={draft.tagline}
-          onChange={(v) => patch({ tagline: v })}
-          placeholder="Finally, a lender you'd refer"
-        />
+        <div className="space-y-2">
+          <Label htmlFor="name">Brand name</Label>
+          <Input
+            id="name"
+            value={draft.name}
+            onChange={(e) => patch({ name: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="tagline">Tagline</Label>
+          <Input
+            id="tagline"
+            value={draft.tagline}
+            onChange={(e) => patch({ tagline: e.target.value })}
+            placeholder="Finally, a lender you'd refer"
+          />
+        </div>
       </div>
 
-      <TextArea
-        label="Positioning"
-        hint="How you want the market to see you, in 1–2 sentences."
-        rows={2}
-        value={draft.positioning}
-        onChange={(v) => patch({ positioning: v })}
-      />
+      <div className="space-y-2">
+        <Label htmlFor="positioning">Positioning</Label>
+        <Textarea
+          id="positioning"
+          rows={2}
+          value={draft.positioning}
+          onChange={(e) => patch({ positioning: e.target.value })}
+        />
+        <p className="text-xs text-muted-foreground">
+          How you want the market to see you, in 1–2 sentences.
+        </p>
+      </div>
 
-      <TextArea
-        label="Mission"
-        hint="Why you exist, beyond making money."
-        rows={2}
-        value={draft.mission}
-        onChange={(v) => patch({ mission: v })}
-      />
+      <div className="space-y-2">
+        <Label htmlFor="mission">Mission</Label>
+        <Textarea
+          id="mission"
+          rows={2}
+          value={draft.mission}
+          onChange={(e) => patch({ mission: e.target.value })}
+        />
+        <p className="text-xs text-muted-foreground">
+          Why you exist, beyond making money.
+        </p>
+      </div>
 
-      <TextArea
-        label="Description"
-        hint="What you do, in plain English."
-        rows={3}
-        value={draft.description}
-        onChange={(v) => patch({ description: v })}
-      />
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          rows={3}
+          value={draft.description}
+          onChange={(e) => patch({ description: e.target.value })}
+        />
+        <p className="text-xs text-muted-foreground">
+          What you do, in plain English.
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Input
-          label="Founded year"
-          value={draft.foundedYear}
-          onChange={(v) => patch({ foundedYear: v })}
-          placeholder="2015"
-        />
-        <Input
-          label="Service area"
-          hint="Comma-separated"
-          value={draft.serviceArea.join(", ")}
-          onChange={(v) =>
-            patch({
-              serviceArea: v
-                .split(",")
-                .map((s) => s.trim())
-                .filter(Boolean),
-            })
-          }
-          placeholder="Riverside County, San Bernardino"
-        />
+        <div className="space-y-2">
+          <Label htmlFor="founded">Founded year</Label>
+          <Input
+            id="founded"
+            value={draft.foundedYear}
+            onChange={(e) => patch({ foundedYear: e.target.value })}
+            placeholder="2015"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="service">Service area</Label>
+          <Input
+            id="service"
+            value={draft.serviceArea.join(", ")}
+            onChange={(e) =>
+              patch({
+                serviceArea: e.target.value
+                  .split(",")
+                  .map((s) => s.trim())
+                  .filter(Boolean),
+              })
+            }
+            placeholder="Riverside County, San Bernardino"
+          />
+          <p className="text-xs text-muted-foreground">Comma-separated</p>
+        </div>
       </div>
 
-      <fieldset>
-        <legend className="text-sm font-medium">Colors</legend>
-        <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-5">
-          {(
-            ["primary", "secondary", "accent", "bg", "text"] as const
-          ).map((k) => (
-            <label key={k} className="block text-xs text-neutral-600">
-              {k}
-              <div className="mt-1 flex items-center gap-2 rounded-lg ring-1 ring-neutral-300 px-2 py-1.5">
+      <div className="space-y-3">
+        <Label>Colors</Label>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          {colorKeys.map((k) => (
+            <div key={k} className="space-y-1.5">
+              <p className="text-xs text-muted-foreground">{k}</p>
+              <div className="flex items-center gap-2 rounded-md border border-input bg-transparent px-2 py-1.5">
                 <input
                   type="color"
                   value={draft.colors[k] || "#000000"}
@@ -104,100 +134,50 @@ export default function ReviewStep() {
                   onChange={(e) =>
                     patch({ colors: { ...draft.colors, [k]: e.target.value } })
                   }
-                  className="flex-1 bg-transparent text-sm outline-none"
+                  className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
                 />
               </div>
-            </label>
+            </div>
           ))}
         </div>
-      </fieldset>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Input
-          label="Heading font"
-          value={draft.fonts.heading}
-          onChange={(v) => patch({ fonts: { ...draft.fonts, heading: v } })}
-          placeholder="Anton"
-        />
-        <Input
-          label="Body font"
-          value={draft.fonts.body}
-          onChange={(v) => patch({ fonts: { ...draft.fonts, body: v } })}
-          placeholder="Inter"
-        />
+        <div className="space-y-2">
+          <Label htmlFor="heading">Heading font</Label>
+          <Input
+            id="heading"
+            value={draft.fonts.heading}
+            onChange={(e) =>
+              patch({ fonts: { ...draft.fonts, heading: e.target.value } })
+            }
+            placeholder="Anton"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="body">Body font</Label>
+          <Input
+            id="body"
+            value={draft.fonts.body}
+            onChange={(e) =>
+              patch({ fonts: { ...draft.fonts, body: e.target.value } })
+            }
+            placeholder="Inter"
+          />
+        </div>
       </div>
 
-      <div className="flex justify-between pt-2">
-        <button
-          type="button"
+      <div className="flex items-center justify-between border-t border-border/60 pt-6">
+        <Button
+          variant="ghost"
           onClick={() => router.push("/onboarding/basics")}
-          className="text-sm text-neutral-600 hover:text-neutral-900"
         >
           ← Back
-        </button>
-        <button
-          type="button"
-          onClick={() => router.push("/onboarding/voice")}
-          className="rounded-lg bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-neutral-800"
-        >
-          Continue
-        </button>
+        </Button>
+        <Button onClick={() => router.push("/onboarding/voice")}>
+          Continue →
+        </Button>
       </div>
     </div>
-  );
-}
-
-function Input({
-  label,
-  value,
-  onChange,
-  placeholder,
-  hint,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  hint?: string;
-}) {
-  return (
-    <label className="block text-sm font-medium">
-      {label}
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="input mt-1.5 w-full font-normal"
-      />
-      {hint && <p className="mt-1 text-xs font-normal text-neutral-500">{hint}</p>}
-    </label>
-  );
-}
-
-function TextArea({
-  label,
-  hint,
-  rows,
-  value,
-  onChange,
-}: {
-  label: string;
-  hint?: string;
-  rows: number;
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <label className="block text-sm font-medium">
-      {label}
-      <textarea
-        rows={rows}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="input mt-1.5 w-full font-normal"
-      />
-      {hint && <p className="mt-1 text-xs font-normal text-neutral-500">{hint}</p>}
-    </label>
   );
 }

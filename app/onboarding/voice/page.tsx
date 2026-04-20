@@ -2,6 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useDraft } from "../../../lib/onboarding-state";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 const TONES = [
   "Professional",
@@ -41,18 +45,18 @@ export default function VoiceStep() {
     });
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h2 className="text-2xl font-semibold">Voice & tone</h2>
-        <p className="mt-1 text-sm text-neutral-600">
+    <div className="space-y-8">
+      <header className="space-y-1">
+        <h2 className="text-xl font-semibold tracking-tight">Voice &amp; tone</h2>
+        <p className="text-sm text-muted-foreground">
           Pick the words that describe how your brand talks, then build your
           vocabulary bank.
         </p>
       </header>
 
-      <fieldset>
-        <legend className="text-sm font-medium">Tone keywords</legend>
-        <div className="mt-3 flex flex-wrap gap-2">
+      <div className="space-y-2">
+        <Label>Tone keywords</Label>
+        <div className="flex flex-wrap gap-2">
           {TONES.map((t) => {
             const on = draft.tone.keywords.includes(t);
             return (
@@ -60,28 +64,28 @@ export default function VoiceStep() {
                 type="button"
                 key={t}
                 onClick={() => toggle(t)}
-                className={
-                  "rounded-full px-4 py-1.5 text-sm ring-1 transition " +
-                  (on
-                    ? "bg-neutral-900 text-white ring-neutral-900"
-                    : "bg-white text-neutral-700 ring-neutral-300 hover:ring-neutral-500")
-                }
+                className={cn(
+                  "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
+                  on
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border bg-transparent text-foreground hover:border-foreground/60"
+                )}
               >
                 {t}
               </button>
             );
           })}
         </div>
-      </fieldset>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <List
+        <ListField
           label="Things we should do"
           value={draft.tone.dos}
           onChange={(t) => setList("dos", t)}
           placeholder={"Speak plainly\nUse local references"}
         />
-        <List
+        <ListField
           label="Things to avoid"
           value={draft.tone.donts}
           onChange={(t) => setList("donts", t)}
@@ -90,15 +94,15 @@ export default function VoiceStep() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <List
-          label="Words & phrases we use"
+        <ListField
+          label="Words &amp; phrases we use"
           hint="Signature vocabulary. One per line."
           value={draft.tone.vocab_use}
           onChange={(t) => setList("vocab_use", t)}
           placeholder={"on-time\nowner-operated"}
         />
-        <List
-          label="Words & phrases to avoid"
+        <ListField
+          label="Words &amp; phrases to avoid"
           hint="Never use these. One per line."
           value={draft.tone.vocab_avoid}
           onChange={(t) => setList("vocab_avoid", t)}
@@ -106,27 +110,22 @@ export default function VoiceStep() {
         />
       </div>
 
-      <div className="flex justify-between pt-2">
-        <button
-          type="button"
+      <div className="flex items-center justify-between border-t border-border/60 pt-6">
+        <Button
+          variant="ghost"
           onClick={() => router.push("/onboarding/review")}
-          className="text-sm text-neutral-600 hover:text-neutral-900"
         >
           ← Back
-        </button>
-        <button
-          type="button"
-          onClick={() => router.push("/onboarding/audience")}
-          className="rounded-lg bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-neutral-800"
-        >
-          Continue
-        </button>
+        </Button>
+        <Button onClick={() => router.push("/onboarding/audience")}>
+          Continue →
+        </Button>
       </div>
     </div>
   );
 }
 
-function List({
+function ListField({
   label,
   hint,
   value,
@@ -140,18 +139,15 @@ function List({
   placeholder?: string;
 }) {
   return (
-    <label className="block text-sm font-medium">
-      {label}
-      <textarea
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <Textarea
         rows={4}
         value={value.join("\n")}
         onChange={(e) => onChange(e.target.value)}
-        className="input mt-1.5 w-full font-normal"
         placeholder={placeholder}
       />
-      {hint && (
-        <p className="mt-1 text-xs font-normal text-neutral-500">{hint}</p>
-      )}
-    </label>
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+    </div>
   );
 }

@@ -3,6 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useDraft, type OnboardingDraft } from "../../../lib/onboarding-state";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 const PLATFORMS: { value: OnboardingDraft["primaryPlatform"]; label: string }[] =
   [
@@ -138,18 +142,20 @@ export default function BasicsStep() {
   };
 
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
-      <header>
-        <h2 className="text-2xl font-semibold">Let&apos;s find your brand</h2>
-        <p className="mt-1 text-sm text-neutral-600">
+    <form onSubmit={onSubmit} className="space-y-8">
+      <header className="space-y-1">
+        <h2 className="text-xl font-semibold tracking-tight">
+          Let&apos;s find your brand
+        </h2>
+        <p className="text-sm text-muted-foreground">
           Give us your website and handle — we&apos;ll pull in your logo,
           colors, and profile automatically.
         </p>
       </header>
 
-      <fieldset>
-        <legend className="text-sm font-medium">Primary platform</legend>
-        <div className="mt-2 flex flex-wrap gap-2">
+      <div className="space-y-2">
+        <Label>Primary platform</Label>
+        <div className="flex flex-wrap gap-2">
           {PLATFORMS.map((p) => {
             const on = draft.primaryPlatform === p.value;
             return (
@@ -157,60 +163,55 @@ export default function BasicsStep() {
                 type="button"
                 key={p.value}
                 onClick={() => patch({ primaryPlatform: p.value })}
-                className={
-                  "rounded-full px-4 py-1.5 text-sm ring-1 transition " +
-                  (on
-                    ? "bg-neutral-900 text-white ring-neutral-900"
-                    : "bg-white text-neutral-700 ring-neutral-300 hover:ring-neutral-500")
-                }
+                className={cn(
+                  "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
+                  on
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border bg-transparent text-foreground hover:border-foreground/60"
+                )}
               >
                 {p.label}
               </button>
             );
           })}
         </div>
-      </fieldset>
+      </div>
 
-      <Field
-        label="Website URL"
-        hint="We'll scrape it for logo, colors, and copy."
-        htmlFor="websiteUrl"
-      >
+      <div className="space-y-2">
+        <Label htmlFor="websiteUrl">Website URL</Label>
         <div className="flex gap-2">
-          <input
+          <Input
             id="websiteUrl"
             type="url"
             placeholder="https://yourbrand.com"
             value={draft.websiteUrl}
             onChange={(e) => patch({ websiteUrl: e.target.value })}
-            className="input flex-1"
+            className="flex-1"
           />
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={onFetch}
             disabled={scraping || !draft.websiteUrl}
-            className="shrink-0 rounded-lg ring-1 ring-neutral-300 px-4 text-sm font-medium text-neutral-700 hover:ring-neutral-900 disabled:opacity-50"
           >
             {scraping ? "Fetching…" : "Fetch"}
-          </button>
+          </Button>
         </div>
+        <p className="text-xs text-muted-foreground">
+          We&apos;ll scrape it for logo, colors, and copy.
+        </p>
         {scrapeNote && (
-          <p className="mt-1 text-xs text-emerald-700">{scrapeNote}</p>
+          <p className="text-xs text-emerald-400">{scrapeNote}</p>
         )}
-      </Field>
+      </div>
 
-      <Field
-        label={requiresIg ? "Instagram handle" : "Social handle"}
-        hint={
-          requiresIg
-            ? "Public profile only — no password needed."
-            : "Public profile handle on your primary platform."
-        }
-        htmlFor="igHandle"
-      >
+      <div className="space-y-2">
+        <Label htmlFor="igHandle">
+          {requiresIg ? "Instagram handle" : "Social handle"}
+        </Label>
         <div className="flex gap-2">
-          <div className="flex flex-1 items-center rounded-lg ring-1 ring-neutral-300 focus-within:ring-2 focus-within:ring-neutral-900">
-            <span className="pl-3 text-neutral-500">@</span>
+          <div className="flex flex-1 items-center overflow-hidden rounded-md border border-input bg-transparent focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
+            <span className="pl-3 text-sm text-muted-foreground">@</span>
             <input
               id="igHandle"
               type="text"
@@ -219,73 +220,51 @@ export default function BasicsStep() {
               onChange={(e) =>
                 patch({ igHandle: e.target.value.replace(/^@/, "") })
               }
-              className="input flex-1 rounded-none ring-0 focus:ring-0"
+              className="flex-1 bg-transparent px-2 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground"
             />
           </div>
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={onFetchIg}
             disabled={igFetching || !draft.igHandle}
-            className="shrink-0 rounded-lg ring-1 ring-neutral-300 px-4 text-sm font-medium text-neutral-700 hover:ring-neutral-900 disabled:opacity-50"
           >
             {igFetching ? "Fetching…" : "Fetch IG"}
-          </button>
+          </Button>
         </div>
-        {igNote && <p className="mt-1 text-xs text-emerald-700">{igNote}</p>}
-      </Field>
+        <p className="text-xs text-muted-foreground">
+          {requiresIg
+            ? "Public profile only — no password needed."
+            : "Public profile handle on your primary platform."}
+        </p>
+        {igNote && <p className="text-xs text-emerald-400">{igNote}</p>}
+      </div>
 
-      <Field
-        label="Headquarters / primary location"
-        hint="City or region — used for local content and hashtags."
-        htmlFor="hq"
-      >
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="hq">Headquarters / primary location</Label>
+        <Input
           id="hq"
           type="text"
           placeholder="Riverside, CA"
           value={draft.hqLocation}
           onChange={(e) => patch({ hqLocation: e.target.value })}
-          className="input"
         />
-      </Field>
+        <p className="text-xs text-muted-foreground">
+          City or region — used for local content and hashtags.
+        </p>
+      </div>
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error}
         </p>
       )}
 
-      <div className="flex justify-end pt-2">
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-lg bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
-        >
-          {submitting ? "Working…" : "Continue"}
-        </button>
+      <div className="flex items-center justify-end border-t border-border/60 pt-6">
+        <Button type="submit" disabled={submitting}>
+          {submitting ? "Working…" : "Continue →"}
+        </Button>
       </div>
     </form>
-  );
-}
-
-function Field({
-  label,
-  hint,
-  htmlFor,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  htmlFor: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label htmlFor={htmlFor} className="block text-sm font-medium">
-        {label}
-      </label>
-      {children}
-      {hint && <p className="text-xs text-neutral-500">{hint}</p>}
-    </div>
   );
 }
