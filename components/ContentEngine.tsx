@@ -31,8 +31,9 @@ const STACK_POSITIONS = [
 
 export default function ContentEngine() {
   const [active, setActive] = useState(0);
-  const [followers, setFollowers] = useState(18472);
-  const [engagements, setEngagements] = useState(2347);
+  const [followers, setFollowers] = useState(0);
+  const [engagements, setEngagements] = useState(0);
+  const [phase, setPhase] = useState<"intro" | "loop">("intro");
   const containerRef = useRef<HTMLDivElement>(null);
 
   const mx = useMotionValue(0);
@@ -42,14 +43,29 @@ export default function ContentEngine() {
   const tiltX = useTransform(smy, [-1, 1], [8, -8]);
   const tiltY = useTransform(smx, [-1, 1], [-12, 12]);
 
+  // Intro sequence — one-shot on mount
   useEffect(() => {
+    const counterTimer = setTimeout(() => {
+      setFollowers(18472);
+      setEngagements(2347);
+    }, 1100);
+    const phaseTimer = setTimeout(() => setPhase("loop"), 1800);
+    return () => {
+      clearTimeout(counterTimer);
+      clearTimeout(phaseTimer);
+    };
+  }, []);
+
+  // Beat cycle — only runs after intro completes
+  useEffect(() => {
+    if (phase !== "loop") return;
     const id = setInterval(() => {
       setActive((a) => (a + 1) % SLIDES.length);
       setFollowers((f) => f + Math.floor(40 + Math.random() * 180));
       setEngagements((e) => e + Math.floor(80 + Math.random() * 260));
     }, BEAT_MS);
     return () => clearInterval(id);
-  }, []);
+  }, [phase]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -90,9 +106,13 @@ export default function ContentEngine() {
       <motion.div
         key={`glow-${active}`}
         aria-hidden
-        initial={{ opacity: 0, scale: 0.8 }}
+        initial={{ opacity: 0, scale: 0.7 }}
         animate={{ opacity: 0.55, scale: 1 }}
-        transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+        transition={{
+          duration: phase === "intro" ? 1.6 : 1.2,
+          delay: phase === "intro" ? 0.3 : 0,
+          ease: [0.22, 1, 0.36, 1],
+        }}
         style={{
           position: "absolute",
           width: 520,
@@ -121,10 +141,22 @@ export default function ContentEngine() {
           const pos = STACK_POSITIONS[Math.min(offset, STACK_POSITIONS.length - 1)];
           const hidden = offset >= STACK_POSITIONS.length;
 
+          // Intro: each card flies in from offscreen-right, deep back, staggered by stack offset
+          // Hero card comes in LAST so it lands on top
+          const introDelay = (SLIDES.length - 1 - offset) * 0.09;
+
           return (
             <motion.div
               key={slide.src}
-              initial={false}
+              initial={{
+                x: 720,
+                y: -120,
+                z: -1400,
+                scale: 0.35,
+                rotateZ: 18,
+                opacity: 0,
+                filter: "blur(32px)",
+              }}
               animate={{
                 x: pos.x,
                 y: pos.y,
@@ -136,9 +168,10 @@ export default function ContentEngine() {
               }}
               transition={{
                 type: "spring",
-                stiffness: 90,
-                damping: 18,
+                stiffness: phase === "intro" ? 70 : 90,
+                damping: phase === "intro" ? 16 : 18,
                 mass: 0.9,
+                delay: phase === "intro" ? introDelay : 0,
               }}
               style={{
                 position: "absolute",
@@ -199,8 +232,11 @@ export default function ContentEngine() {
         })}
       </motion.div>
 
-      {/* Floating meta — platform tag, brand, counters */}
-      <div
+      {/* Floating meta — platform tag, brand */}
+      <motion.div
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 1.25, ease: [0.22, 1, 0.36, 1] }}
         style={{
           position: "absolute",
           top: "8%",
@@ -265,10 +301,13 @@ export default function ContentEngine() {
             {heroSlide.brand}
           </motion.div>
         </AnimatePresence>
-      </div>
+      </motion.div>
 
       {/* Rolling counters — bottom right */}
-      <div
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 1.05, ease: [0.22, 1, 0.36, 1] }}
         style={{
           position: "absolute",
           bottom: "8%",
@@ -282,7 +321,7 @@ export default function ContentEngine() {
       >
         <Counter label="Followers" value={followers} accent={heroSlide.accent} />
         <Counter label="Engagements" value={engagements} accent={heroSlide.accent} />
-      </div>
+      </motion.div>
 
       {/* Corner ticks */}
       <CornerTicks />
