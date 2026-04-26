@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { slugify, useDraft } from "../../../lib/onboarding-state";
 import { Button } from "@/components/ui/button";
 
@@ -10,6 +10,20 @@ export default function ConfirmStep() {
   const { draft, reset, loaded } = useDraft();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [invite, setInvite] = useState<{
+    slug: string;
+    name: string;
+    email: string;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/onboarding/invite")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (j?.ok) setInvite({ slug: j.slug, name: j.name, email: j.email });
+      })
+      .catch(() => {});
+  }, []);
 
   if (!loaded) return null;
 
@@ -17,21 +31,23 @@ export default function ConfirmStep() {
     setSubmitting(true);
     setError(null);
     try {
+      const slug =
+        invite?.slug ||
+        slugify(draft.name || draft.igHandle || draft.websiteUrl);
       const res = await fetch("/api/onboarding/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...draft,
-          slug: slugify(draft.name || draft.igHandle || draft.websiteUrl),
-        }),
+        body: JSON.stringify({ ...draft, slug }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || `Submit failed (${res.status})`);
       }
-      const { slug } = await res.json();
+      const { slug: returnedSlug, dashboardUrl } = await res.json();
       reset();
-      router.push(`/onboarding/done?slug=${slug}`);
+      const params = new URLSearchParams({ slug: returnedSlug });
+      if (dashboardUrl) params.set("dash", dashboardUrl);
+      router.push(`/onboarding/done?${params.toString()}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
       setSubmitting(false);

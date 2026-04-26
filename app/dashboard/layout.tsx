@@ -26,12 +26,18 @@ export default function DashboardLayout({
             >
               Brand kits
             </Link>
+            <Link
+              href="/dashboard/invites"
+              className={buttonVariants({ variant: "ghost", size: "sm" })}
+            >
+              Invites
+            </Link>
             <Separator orientation="vertical" className="mx-1 h-5" />
             <Link
-              href="/onboarding/basics"
+              href="/dashboard/invites"
               className={buttonVariants({ size: "sm" })}
             >
-              New kit
+              + Invite client
             </Link>
             <Separator orientation="vertical" className="mx-1 h-5" />
             <LogoutButton />

@@ -1,7 +1,11 @@
 import type { NextRequest } from "next/server";
+import { cookies } from "next/headers";
 import { supabaseAdmin } from "../../../../lib/supabase-admin";
+import { INVITE_COOKIE, verifyInvite } from "../../../../lib/invite-token";
+import { isAdmin } from "../../../../lib/require-admin";
 
 // Phase 4: upsert brand_kit, persist IG top_posts as assets, kick off competitor discovery.
+// Phase 5: gated by invite cookie OR admin session.
 
 type Audience = {
   tier: "primary" | "secondary" | "tertiary";
@@ -80,6 +84,41 @@ export async function POST(request: NextRequest) {
       { error: "Brand name is required" },
       { status: 400 }
     );
+  }
+
+  // Auth: must have a valid invite cookie OR an admin session.
+  const jar = await cookies();
+  const inviteToken = jar.get(INVITE_COOKIE)?.value;
+  const invite = await verifyInvite(inviteToken);
+  const admin = await isAdmin();
+
+  if (!invite && !admin) {
+    return Response.json({ error: "Invite required" }, { status: 401 });
+  }
+
+  let inviteRow: { id: string; used_at: string | null; revoked_at: string | null } | null = null;
+  if (invite) {
+    if (invite.slug !== body.slug) {
+      return Response.json(
+        { error: "Slug does not match invite" },
+        { status: 403 }
+      );
+    }
+    const { data, error: lookupErr } = await supabaseAdmin()
+      .from("brand_kit_invites")
+      .select("id, used_at, revoked_at")
+      .eq("jti", invite.jti)
+      .maybeSingle();
+    if (lookupErr || !data) {
+      return Response.json({ error: "Invite not recognized" }, { status: 403 });
+    }
+    if (data.revoked_at) {
+      return Response.json({ error: "Invite revoked" }, { status: 403 });
+    }
+    if (data.used_at) {
+      return Response.json({ error: "Invite already used" }, { status: 403 });
+    }
+    inviteRow = data;
   }
 
   const snap = body.igSnapshot;
@@ -181,13 +220,137 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Mirror brand_kit → brands (the table the dashboard app reads).
+  // Use slug as the natural key; service-role client bypasses RLS.
+  const { data: brandRow, error: brandErr } = await sb
+    .from("brands")
+    .upsert(
+      {
+        slug: row.slug,
+        name: row.name,
+        handle: row.ig_handle ? `@${row.ig_handle}` : null,
+        platform: row.primary_platform,
+        color_primary: row.colors?.primary ?? null,
+        color_secondary: row.colors?.secondary ?? null,
+        color_accent: row.colors?.accent ?? null,
+      },
+      { onConflict: "slug" }
+    )
+    .select("id, slug")
+    .single();
+
+  if (brandErr) {
+    console.warn("[onboarding/submit] brand mirror failed", brandErr.message);
+  }
+
+  // If we have an invite (with email), provision dashboard access + magic link.
+  let dashboardMagicLink: string | null = null;
+  if (invite && brandRow) {
+    try {
+      dashboardMagicLink = await provisionClientAccess({
+        email: invite.email,
+        brandId: brandRow.id,
+      });
+    } catch (err) {
+      console.warn(
+        "[onboarding/submit] client provisioning failed",
+        err instanceof Error ? err.message : err
+      );
+    }
+  }
+
+  if (inviteRow) {
+    await sb
+      .from("brand_kit_invites")
+      .update({
+        used_at: new Date().toISOString(),
+        used_brand_kit_id: data.id,
+      })
+      .eq("id", inviteRow.id);
+  }
+
   console.log("[onboarding/submit] saved brand kit", {
     id: data.id,
     slug: data.slug,
     ig_posts_persisted: snap?.top_posts.length ?? 0,
+    via_invite: Boolean(inviteRow),
+    provisioned: Boolean(dashboardMagicLink),
   });
 
-  return Response.json({ ok: true, id: data.id, slug: data.slug });
+  const res = Response.json({
+    ok: true,
+    id: data.id,
+    slug: data.slug,
+    dashboardUrl: dashboardMagicLink,
+  });
+  if (inviteRow) {
+    res.headers.append(
+      "Set-Cookie",
+      `${INVITE_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${
+        process.env.NODE_ENV === "production" ? "; Secure" : ""
+      }`
+    );
+  }
+  return res;
+}
+
+async function provisionClientAccess({
+  email,
+  brandId,
+}: {
+  email: string;
+  brandId: string;
+}): Promise<string | null> {
+  const sb = supabaseAdmin();
+  const dashboardBase = (process.env.DASHBOARD_URL || "").replace(/\/$/, "");
+  if (!dashboardBase) {
+    console.warn("[provision] DASHBOARD_URL not set — skipping magic link");
+    return null;
+  }
+
+  // 1. Resolve or create the auth user.
+  let userId: string | null = null;
+
+  // Look up via admin.listUsers (paginated). For small client counts this is fine.
+  const { data: list } = await sb.auth.admin.listUsers({ page: 1, perPage: 200 });
+  const existing = list?.users?.find(
+    (u) => u.email?.toLowerCase() === email.toLowerCase()
+  );
+  if (existing) {
+    userId = existing.id;
+  } else {
+    const { data: created, error: createErr } =
+      await sb.auth.admin.createUser({
+        email,
+        email_confirm: true,
+      });
+    if (createErr || !created.user) {
+      throw new Error(`createUser failed: ${createErr?.message ?? "unknown"}`);
+    }
+    userId = created.user.id;
+  }
+
+  // 2. Grant brand access (idempotent on (user_id, brand_id)).
+  const { error: accessErr } = await sb
+    .from("user_brand_access")
+    .upsert(
+      { user_id: userId, brand_id: brandId, role: "client" },
+      { onConflict: "user_id,brand_id" }
+    );
+  if (accessErr) {
+    throw new Error(`user_brand_access upsert: ${accessErr.message}`);
+  }
+
+  // 3. Mint a magic link that lands on the dashboard.
+  const { data: link, error: linkErr } = await sb.auth.admin.generateLink({
+    type: "magiclink",
+    email,
+    options: { redirectTo: `${dashboardBase}/auth/callback` },
+  });
+  if (linkErr || !link?.properties?.action_link) {
+    throw new Error(`generateLink: ${linkErr?.message ?? "no action_link"}`);
+  }
+  return link.properties.action_link;
 }
 
 async function discoverCompetitors(brandKitId: string, handle: string) {

@@ -5,9 +5,9 @@ import { buttonVariants } from "@/components/ui/button";
 export default async function Done({
   searchParams,
 }: {
-  searchParams: Promise<{ slug?: string }>;
+  searchParams: Promise<{ slug?: string; dash?: string }>;
 }) {
-  const { slug } = await searchParams;
+  const { slug, dash } = await searchParams;
   return (
     <div className="space-y-8 text-center">
       <div className="mx-auto flex size-14 items-center justify-center rounded-full border border-border/60 bg-background/40">
@@ -22,11 +22,39 @@ export default async function Done({
           <code className="rounded border border-border/60 bg-background/60 px-1.5 py-0.5 font-mono text-xs text-foreground">
             {slug}
           </code>{" "}
-          is live. Our team will review and start creating content shortly.
+          is live. Our team will start creating content shortly.
         </p>
       </div>
+
+      {dash ? (
+        <div className="space-y-4 rounded-xl border border-border/60 bg-background/40 p-6 text-left">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Your client dashboard
+            </p>
+            <p className="mt-1 text-sm text-foreground">
+              We sent a magic link to your email. Or open your dashboard now —
+              this link expires in 1 hour.
+            </p>
+          </div>
+          <Link
+            href={dash}
+            className={buttonVariants({ variant: "default" })}
+          >
+            Open my dashboard →
+          </Link>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-border/60 bg-background/40 p-4 text-left">
+          <p className="text-sm text-muted-foreground">
+            Your account manager will follow up shortly with access to your
+            content review dashboard.
+          </p>
+        </div>
+      )}
+
       <div className="flex justify-center border-t border-border/60 pt-6">
-        <Link href="/" className={buttonVariants({ variant: "default" })}>
+        <Link href="/" className={buttonVariants({ variant: "ghost" })}>
           Back to home
         </Link>
       </div>

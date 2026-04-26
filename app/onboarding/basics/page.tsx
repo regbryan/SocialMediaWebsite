@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDraft, type OnboardingDraft } from "../../../lib/onboarding-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,23 @@ export default function BasicsStep() {
   const [scrapeNote, setScrapeNote] = useState<string | null>(null);
   const [igFetching, setIgFetching] = useState(false);
   const [igNote, setIgNote] = useState<string | null>(null);
+  const [invite, setInvite] = useState<{ name: string; email: string } | null>(
+    null
+  );
+
+  useEffect(() => {
+    fetch("/api/onboarding/invite")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (j?.ok) {
+          setInvite({ name: j.name, email: j.email });
+          // Prefill name from invite if user hasn't typed one yet.
+          if (!draft.name) patch({ name: j.name });
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!loaded) return null;
 
@@ -151,6 +168,13 @@ export default function BasicsStep() {
           Give us your website and handle — we&apos;ll pull in your logo,
           colors, and profile automatically.
         </p>
+        {invite && (
+          <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/40 px-3 py-1 text-xs text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-emerald-400" />
+            Invited as <span className="text-foreground">{invite.name}</span> ·{" "}
+            <span className="text-foreground">{invite.email}</span>
+          </p>
+        )}
       </header>
 
       <div className="space-y-2">
