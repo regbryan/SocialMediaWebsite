@@ -26,7 +26,7 @@ type AssetRow = {
   id: string;
   kind: string;
   url: string;
-  meta: { label?: string } | null;
+  meta: { label?: string; primary?: boolean } | null;
   created_at: string;
 };
 
@@ -51,14 +51,21 @@ export async function loadReferenceImages(
 
   const rows = data as AssetRow[];
 
-  // Pick one of each priority kind, in order. If a kind is missing,
-  // backfill with the next available row of any included kind so we
+  // Pick one of each priority kind, in order. Within a kind, an asset
+  // explicitly marked `meta.primary = true` always wins so operators
+  // can pin which logo/hero is used; otherwise fall back to most recent.
+  // If a kind is missing, backfill with the next available row so we
   // always send up to MAX_REFS images when assets exist.
+  const pickOfKind = (kind: string): AssetRow | undefined => {
+    const ofKind = rows.filter((r) => r.kind === kind);
+    return ofKind.find((r) => r.meta?.primary) ?? ofKind[0];
+  };
+
   const picked: AssetRow[] = [];
   for (const kind of PRIORITY) {
     if (picked.length >= MAX_REFS) break;
-    const next = rows.find((r) => r.kind === kind && !picked.includes(r));
-    if (next) picked.push(next);
+    const next = pickOfKind(kind);
+    if (next && !picked.includes(next)) picked.push(next);
   }
   for (const row of rows) {
     if (picked.length >= MAX_REFS) break;
