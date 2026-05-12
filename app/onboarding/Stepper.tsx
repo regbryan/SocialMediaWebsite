@@ -21,7 +21,8 @@ export default function Stepper() {
   );
 
   return (
-    <ol className="flex items-center gap-0 overflow-x-auto pb-1">
+    <div className="space-y-3">
+      <ol className="flex items-center gap-0 overflow-x-auto pb-1">
       {STEPS.map((s, i) => {
         const state =
           i < currentIdx ? "done" : i === currentIdx ? "active" : "pending";
@@ -73,6 +74,19 @@ export default function Stepper() {
           </li>
         );
       })}
-    </ol>
+      </ol>
+      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <span
+          aria-hidden
+          className="inline-block size-1.5 rounded-full"
+          style={{ background: "#7ee787" }}
+        />
+        Auto-saved · close the tab anytime and come back to{" "}
+        <Link href="/onboarding" className="underline-offset-2 hover:underline">
+          /onboarding
+        </Link>{" "}
+        to resume.
+      </div>
+    </div>
   );
 }
