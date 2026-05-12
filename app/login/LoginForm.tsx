@@ -20,13 +20,23 @@ export default function LoginForm({ next }: { next: string }) {
   const [mode, setMode] = useState<Mode>("client");
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card
+      className="w-full max-w-sm"
+      style={{
+        background: "#0f0f1a",
+        borderColor: "#1a1a2e",
+        boxShadow: "0 24px 60px -20px rgba(139,92,255,0.18)",
+      }}
+    >
       <CardHeader className="space-y-2">
         <div
           className="flex items-baseline gap-2 tracking-tight"
           style={{ color: "white", fontSize: "22px", fontWeight: 600, letterSpacing: "-0.02em" }}
         >
           SocialPulse
+          <span style={{ color: "#9999a6", fontSize: "13px", fontWeight: 500, letterSpacing: 0 }}>
+            {mode === "admin" ? "Admin" : "Client"}
+          </span>
         </div>
         <CardTitle className="text-xl">Sign in</CardTitle>
         <CardDescription>
@@ -75,10 +85,11 @@ function ModeTab({
     <button
       type="button"
       onClick={onClick}
-      className="flex-1 rounded px-3 py-1.5 text-xs font-medium transition-colors"
+      className="flex-1 rounded px-3 py-1.5 text-xs font-medium uppercase tracking-wider transition-colors"
       style={{
-        background: active ? "white" : "transparent",
-        color: active ? "#07070e" : "#9999a6",
+        background: active ? "#8b5cff" : "transparent",
+        color: active ? "white" : "#9999a6",
+        boxShadow: active ? "0 4px 16px -6px rgba(139,92,255,0.55)" : undefined,
       }}
     >
       {label}
