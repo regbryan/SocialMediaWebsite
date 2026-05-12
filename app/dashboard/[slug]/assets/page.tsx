@@ -15,7 +15,12 @@ import {
 import AssetUploader from "./AssetUploader";
 import AssetCard from "./AssetCard";
 
-type Kit = { id: string; slug: string; name: string };
+type Kit = {
+  id: string;
+  slug: string;
+  name: string;
+  logos: { primary_url?: string; white_url?: string; mark_url?: string } | null;
+};
 
 type Asset = {
   id: string;
@@ -67,11 +72,21 @@ export default async function AssetsPage({
   const sb = supabaseAdmin();
   const { data: kit, error: kitErr } = await sb
     .from("brand_kits")
-    .select("id, slug, name")
+    .select("id, slug, name, logos")
     .eq("slug", slug)
     .maybeSingle();
   if (kitErr || !kit) notFound();
   const k = kit as Kit;
+
+  // Discovered logos come from the onboarding scrape and live on the
+  // kit row, not in brand_kit_assets. They're used by image-gen as a
+  // fallback when no uploaded logo exists. Show them here so operators
+  // see what's already on file before uploading.
+  const discoveredLogos: Array<{ label: string; url: string }> = [];
+  const logos = k.logos ?? {};
+  if (logos.primary_url) discoveredLogos.push({ label: "Primary", url: logos.primary_url });
+  if (logos.white_url) discoveredLogos.push({ label: "White", url: logos.white_url });
+  if (logos.mark_url) discoveredLogos.push({ label: "Mark", url: logos.mark_url });
 
   const { data: assetRows } = await sb
     .from("brand_kit_assets")
@@ -86,6 +101,7 @@ export default async function AssetsPage({
   for (const a of assets) {
     (byKind[a.kind] ??= []).push(a);
   }
+  const hasUploadedLogo = assets.some((a) => a.kind === "logo");
 
   return (
     <div className="space-y-8">
@@ -97,6 +113,71 @@ export default async function AssetsPage({
             : `${assets.length} files on file.`}
         </p>
       </div>
+
+      {discoveredLogos.length > 0 && (
+        <Card
+          style={{
+            borderColor: hasUploadedLogo ? "#1a1a2e" : "rgba(139,92,255,0.4)",
+          }}
+        >
+          <CardHeader>
+            <CardTitle className="text-base">Discovered from onboarding</CardTitle>
+            <CardDescription>
+              {hasUploadedLogo
+                ? "Logo URLs pulled from your website during onboarding. Currently shadowed by an uploaded logo — upload more or remove the uploaded one to fall back to these."
+                : "Logo URLs pulled from your website during onboarding. These are being used by image-gen as the fallback until you upload one. For better quality, upload a real source file below."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-3">
+              {discoveredLogos.map((d) => (
+                <a
+                  key={d.url}
+                  href={d.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group block overflow-hidden rounded-md border"
+                  style={{ borderColor: "#1a1a2e", background: "#0a0a14" }}
+                >
+                  <div
+                    className="relative"
+                    style={{
+                      aspectRatio: "1 / 1",
+                      background:
+                        "repeating-conic-gradient(#0a0a14 0deg 90deg, #0f0f1a 90deg 180deg) 0 0 / 16px 16px",
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={d.url}
+                      alt={d.label}
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                        padding: "12px",
+                      }}
+                    />
+                    {!hasUploadedLogo && d.label === "Primary" && (
+                      <span
+                        className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-white"
+                        style={{ background: "rgba(139,92,255,0.92)" }}
+                      >
+                        ★ In use
+                      </span>
+                    )}
+                  </div>
+                  <div className="px-3 py-2 text-[11px] text-muted-foreground">
+                    {d.label}
+                  </div>
+                </a>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {isAdmin && (
         <Card>

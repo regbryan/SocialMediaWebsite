@@ -41,15 +41,33 @@ export async function loadReferenceImages(
   brandKitId: string
 ): Promise<ImageReference[]> {
   const sb = supabaseAdmin();
-  const { data, error } = await sb
-    .from("brand_kit_assets")
-    .select("id, kind, url, meta, created_at")
-    .eq("brand_kit_id", brandKitId)
-    .in("kind", PRIORITY)
-    .order("created_at", { ascending: false });
-  if (error || !data) return [];
+  const [assetsRes, kitRes] = await Promise.all([
+    sb
+      .from("brand_kit_assets")
+      .select("id, kind, url, meta, created_at")
+      .eq("brand_kit_id", brandKitId)
+      .in("kind", PRIORITY)
+      .order("created_at", { ascending: false }),
+    // brand_kits.logos is JSON populated by the onboarding scraper with
+    // {primary_url, white_url, mark_url}. We use it as a fallback when
+    // no logo has been uploaded so brands that complete onboarding but
+    // never visit the Assets page still get their real logo into prompts.
+    sb
+      .from("brand_kits")
+      .select("logos")
+      .eq("id", brandKitId)
+      .maybeSingle(),
+  ]);
 
-  const rows = data as AssetRow[];
+  if (assetsRes.error || !assetsRes.data) return [];
+
+  const rows = assetsRes.data as AssetRow[];
+  const scrapedLogos =
+    ((kitRes.data?.logos ?? null) as {
+      primary_url?: string;
+      white_url?: string;
+      mark_url?: string;
+    } | null) ?? null;
 
   // Pick one of each priority kind, in order. Within a kind, an asset
   // explicitly marked `meta.primary = true` always wins so operators
@@ -67,6 +85,24 @@ export async function loadReferenceImages(
     const next = pickOfKind(kind);
     if (next && !picked.includes(next)) picked.push(next);
   }
+
+  // Synthesize a logo row from the scraped URL when no uploaded logo
+  // exists. Synthetic ID/created_at so the rest of the pipeline doesn't
+  // care that it came from a different table.
+  if (
+    !picked.some((p) => p.kind === "logo") &&
+    picked.length < MAX_REFS &&
+    scrapedLogos?.primary_url
+  ) {
+    picked.unshift({
+      id: "scraped-logo",
+      kind: "logo",
+      url: scrapedLogos.primary_url,
+      meta: { label: "discovered" },
+      created_at: new Date().toISOString(),
+    });
+  }
+
   for (const row of rows) {
     if (picked.length >= MAX_REFS) break;
     if (!picked.includes(row)) picked.push(row);
