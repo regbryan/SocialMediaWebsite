@@ -200,7 +200,11 @@ function WeekRow({
         <h2 className="text-sm font-semibold tracking-tight">{label}</h2>
         <span className="text-xs text-muted-foreground">{weekCount} posts</span>
       </div>
-      <div className="grid grid-cols-7 gap-2">
+      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:overflow-visible sm:px-0">
+      <div
+        className="grid gap-2 sm:grid-cols-7"
+        style={{ gridTemplateColumns: "repeat(7, minmax(120px, 1fr))" }}
+      >
         {week.days.map((day) => (
           <DayCell
             key={day.date}
@@ -217,6 +221,7 @@ function WeekRow({
             onDrop={onDrop}
           />
         ))}
+      </div>
       </div>
     </div>
   );

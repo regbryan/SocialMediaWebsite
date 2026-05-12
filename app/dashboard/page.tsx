@@ -158,6 +158,7 @@ export default async function BrandKitsList() {
               </span>
             </div>
           </CardHeader>
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -203,6 +204,7 @@ export default async function BrandKitsList() {
               ))}
             </TableBody>
           </Table>
+          </div>
         </Card>
       )}
 
@@ -223,6 +225,7 @@ export default async function BrandKitsList() {
         </Card>
       ) : (
         <Card className="overflow-hidden">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -276,6 +279,7 @@ export default async function BrandKitsList() {
               ))}
             </TableBody>
           </Table>
+          </div>
         </Card>
       )}
     </div>

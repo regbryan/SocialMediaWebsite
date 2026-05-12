@@ -22,11 +22,11 @@ export default async function DashboardLayout({
         className="sticky top-0 z-40 border-b"
         style={{ borderColor: "#1a1a2e", backgroundColor: "rgba(7,7,14,0.96)" }}
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3 sm:px-6 sm:py-4">
           <Link
             href="/dashboard"
             className="flex items-baseline gap-2 tracking-tight"
-            style={{ color: "white", fontSize: "22px", fontWeight: 600, letterSpacing: "-0.02em" }}
+            style={{ color: "white", fontSize: "20px", fontWeight: 600, letterSpacing: "-0.02em" }}
           >
             SocialPulse
             <span style={{ color: "#9999a6", fontSize: "13px", fontWeight: 500, letterSpacing: "0" }}>
@@ -35,7 +35,7 @@ export default async function DashboardLayout({
           </Link>
 
           {user.kind === "admin" ? (
-            <nav className="flex items-center gap-1 text-sm">
+            <nav className="flex w-full flex-wrap items-center gap-1 text-sm sm:w-auto">
               <Link
                 href="/dashboard"
                 className={buttonVariants({ variant: "ghost", size: "sm" })}
@@ -54,14 +54,15 @@ export default async function DashboardLayout({
               >
                 Invites
               </Link>
-              <Separator orientation="vertical" className="mx-1 h-5" />
+              <Separator orientation="vertical" className="mx-1 hidden h-5 sm:block" />
               <Link
                 href="/dashboard/invites"
-                className={buttonVariants({ size: "sm" })}
+                className={buttonVariants({ size: "sm" }) + " whitespace-nowrap"}
               >
-                + Invite client
+                + Invite
+                <span className="hidden sm:inline">&nbsp;client</span>
               </Link>
-              <Separator orientation="vertical" className="mx-1 h-5" />
+              <Separator orientation="vertical" className="mx-1 hidden h-5 sm:block" />
               <LogoutButton />
             </nav>
           ) : (
@@ -74,7 +75,7 @@ export default async function DashboardLayout({
           )}
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-6 py-10">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">{children}</main>
     </div>
   );
 }

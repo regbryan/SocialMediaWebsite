@@ -490,7 +490,7 @@ function Bar({
 }) {
   const pct = Math.max(1.5, (value / max) * 100);
   return (
-    <div className="grid grid-cols-[200px_1fr_100px] items-center gap-4 text-sm">
+    <div className="grid grid-cols-[1fr_auto] gap-2 text-sm sm:grid-cols-[minmax(120px,180px)_1fr_72px] sm:gap-4 sm:items-center">
       <div className="min-w-0">
         <div className={"truncate " + (highlight ? "font-semibold" : "")}>
           {label}
@@ -499,10 +499,13 @@ function Bar({
           <div className="truncate text-xs text-muted-foreground">{sublabel}</div>
         )}
       </div>
+      <div className="text-right text-xs tabular-nums text-muted-foreground sm:order-last">
+        {suffix ?? value.toLocaleString()}
+      </div>
       <Progress
         value={pct}
         className={
-          "h-2.5 " +
+          "col-span-2 h-2 sm:col-span-1 sm:h-2.5 " +
           (highlight
             ? "[&>div]:bg-foreground"
             : muted
@@ -510,9 +513,6 @@ function Bar({
               : "[&>div]:bg-muted-foreground/70")
         }
       />
-      <div className="text-right text-xs tabular-nums text-muted-foreground">
-        {suffix ?? value.toLocaleString()}
-      </div>
     </div>
   );
 }
