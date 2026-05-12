@@ -7,6 +7,7 @@ import {
 } from "../../../../lib/dashboard-auth";
 import {
   Card,
+  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -75,15 +76,33 @@ export default async function CalendarPage({
       </div>
 
       {drafts.length === 0 ? (
-        <Card>
+        <Card
+          style={{
+            borderColor: k.kit_approved_at
+              ? "rgba(139,92,255,0.35)"
+              : undefined,
+          }}
+        >
           <CardHeader>
             <CardTitle className="text-base">Nothing scheduled yet</CardTitle>
             <CardDescription>
               {k.kit_approved_at
-                ? "Generate a content batch from the content page to populate the calendar."
+                ? "Generate a 30-day batch on the content page and posts will land here automatically — one per day, drag-to-reschedule from there."
                 : "Approve the brand kit first, then generate content."}
             </CardDescription>
           </CardHeader>
+          <CardContent>
+            <Link
+              href={
+                k.kit_approved_at
+                  ? `/dashboard/${k.slug}/content`
+                  : `/dashboard/${k.slug}/previews`
+              }
+              className={buttonVariants({ size: "sm" })}
+            >
+              {k.kit_approved_at ? "Generate first batch →" : "Open previews →"}
+            </Link>
+          </CardContent>
         </Card>
       ) : (
         <CalendarBoard

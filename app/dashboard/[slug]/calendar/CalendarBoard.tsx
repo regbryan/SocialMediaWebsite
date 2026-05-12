@@ -300,6 +300,15 @@ function DayCell({
         <span>{dayName}</span>
         <span style={{ color: isToday ? "#b18bff" : undefined }}>{dayNum}</span>
       </div>
+      {day.drafts.length === 0 && (
+        <EmptyDayHint
+          isAdmin={isAdmin}
+          isDragging={Boolean(drag)}
+          isDropTarget={Boolean(isDropTarget)}
+          isHover={isHover}
+          isPast={isPast}
+        />
+      )}
       <div className="space-y-1.5">
         {day.drafts.map((d) => (
           <DraftPill
@@ -405,6 +414,63 @@ function DraftPill({
       {content}
     </Link>
   );
+}
+
+/**
+ * Inline hint inside an empty day cell. Three states it can reach:
+ *
+ *   - drag-active + drop target + hover  → "Drop here" prompt (purple)
+ *   - drag-active + valid drop target    → muted "Drop here" hint so the
+ *                                          operator sees which days will
+ *                                          accept the pill without having
+ *                                          to hover each one
+ *   - admin idle (no drag)               → faint "+ Empty" so empty future
+ *                                          slots read as actionable
+ *
+ * Past empty days stay blank — nothing to do there.
+ */
+function EmptyDayHint({
+  isAdmin,
+  isDragging,
+  isDropTarget,
+  isHover,
+  isPast,
+}: {
+  isAdmin: boolean;
+  isDragging: boolean;
+  isDropTarget: boolean;
+  isHover: boolean;
+  isPast: boolean;
+}) {
+  if (isPast) return null;
+
+  if (isDragging && isDropTarget) {
+    return (
+      <div
+        className="flex h-12 items-center justify-center rounded-md border border-dashed text-[10px] font-medium uppercase tracking-wider"
+        style={{
+          borderColor: isHover ? "rgba(139,92,255,0.75)" : "rgba(139,92,255,0.25)",
+          color: isHover ? "#b18bff" : "rgba(177,139,255,0.5)",
+          background: isHover ? "rgba(139,92,255,0.08)" : "transparent",
+        }}
+      >
+        {isHover ? "Drop here" : "Drop"}
+      </div>
+    );
+  }
+
+  if (isAdmin && !isDragging) {
+    return (
+      <div
+        className="flex h-8 items-center justify-center text-[10px] uppercase tracking-wider text-muted-foreground/40"
+        aria-hidden
+      >
+        + Empty
+      </div>
+    );
+  }
+
+  return null;
 }
 
 function parseDateUTC(s: string): Date {
