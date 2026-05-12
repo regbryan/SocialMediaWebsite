@@ -97,13 +97,14 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Invite required" }, { status: 401 });
   }
 
-  let inviteRow: {
+  type InviteRow = {
     id: string;
     used_at: string | null;
     revoked_at: string | null;
     source: string;
     tier: string | null;
-  } | null = null;
+  };
+  let inviteRow: InviteRow | null = null;
   if (invite) {
     if (invite.slug !== body.slug) {
       return Response.json(
@@ -125,7 +126,7 @@ export async function POST(request: NextRequest) {
     if (data.used_at) {
       return Response.json({ error: "Invite already used" }, { status: 403 });
     }
-    inviteRow = data as typeof inviteRow;
+    inviteRow = data as InviteRow;
   }
 
   const isSelfServe = inviteRow?.source === "self-serve";

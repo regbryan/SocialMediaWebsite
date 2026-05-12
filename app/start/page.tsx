@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,14 @@ const TIER_LABELS: Record<string, string> = {
 };
 
 export default function StartPage() {
+  return (
+    <Suspense fallback={null}>
+      <StartPageInner />
+    </Suspense>
+  );
+}
+
+function StartPageInner() {
   const router = useRouter();
   const search = useSearchParams();
   const planParam = search.get("plan");

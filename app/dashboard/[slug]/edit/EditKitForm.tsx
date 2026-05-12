@@ -263,8 +263,8 @@ export default function EditKitForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Save failed");
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Save failed");
       setSaved(true);
       router.refresh();
     } catch (err) {
