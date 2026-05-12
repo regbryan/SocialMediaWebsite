@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 import { ADMIN_COOKIE, verifySession } from "./lib/admin-auth";
 import {
   INVITE_COOKIE,
@@ -17,7 +18,6 @@ export async function proxy(request: NextRequest) {
       const payload = await verifyInvite(tokenParam).catch(() => null);
       const url = request.nextUrl.clone();
       url.searchParams.delete("invite");
-      // Always land on /onboarding/basics on a fresh invite click.
       url.pathname = "/onboarding/basics";
       const res = NextResponse.redirect(url);
       if (payload) {
@@ -34,10 +34,40 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // /dashboard/*  — admin password gate (existing behavior).
-  const token = request.cookies.get(ADMIN_COOKIE)?.value;
-  const ok = await verifySession(token).catch(() => false);
-  if (ok) return NextResponse.next();
+  // /dashboard/*  — accept EITHER admin password cookie OR Supabase client session.
+  // Admin (the 2 internal users) takes the existing password path.
+  // Clients arrive via magic link, which sets Supabase session cookies on /auth/callback.
+  const adminToken = request.cookies.get(ADMIN_COOKIE)?.value;
+  const adminOk = adminToken
+    ? await verifySession(adminToken).catch(() => false)
+    : false;
+  if (adminOk) return NextResponse.next();
+
+  // Try a Supabase session. Use a passthrough response so any refreshed
+  // session cookies are forwarded to the browser.
+  const supabaseRes = NextResponse.next({ request: { headers: request.headers } });
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (url && anon) {
+    const supabase = createServerClient(url, anon, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value);
+            supabaseRes.cookies.set(name, value, options);
+          });
+        },
+      },
+    });
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) return supabaseRes;
+  }
 
   const loginUrl = new URL("/login", request.url);
   loginUrl.searchParams.set("next", pathname + request.nextUrl.search);

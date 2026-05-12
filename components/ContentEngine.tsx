@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "motion/react";
 
 type Slide = {
@@ -10,14 +11,16 @@ type Slide = {
   accent: string;
 };
 
-// All slides locked to 4:5 Instagram aspect (0.806) for uniform sizing
+// All slides locked to 4:5 Instagram aspect (0.806) for uniform sizing.
+// Accent is brand purple — single accent across slides per DESIGN.md "one accent" principle.
+const ACCENT = "#8b5cff";
 const SLIDES: Slide[] = [
-  { src: "/portfolio/v3_01_spring_ac.png", platform: "INSTAGRAM", brand: "Inland Empire Comfort", accent: "#3b81ff" },
-  { src: "/portfolio/omega-tax.png", platform: "INSTAGRAM", brand: "Omega Mortgage", accent: "#c084fc" },
-  { src: "/portfolio/v2_02_myth_20pct.png", platform: "INSTAGRAM", brand: "Stephanie Perez Home Loans", accent: "#ff6b9d" },
-  { src: "/portfolio/v5_06f_myth_busted.png", platform: "INSTAGRAM", brand: "Inland Empire Comfort", accent: "#3b81ff" },
-  { src: "/portfolio/v1_01_bright_canary_explainer.png", platform: "INSTAGRAM", brand: "Cyber Safety Cop", accent: "#ffc857" },
-  { src: "/portfolio/v6_07_mothers_day.png", platform: "INSTAGRAM", brand: "Inland Empire Comfort", accent: "#8b5cff" },
+  { src: "/portfolio/v3_01_spring_ac.png", platform: "INSTAGRAM", brand: "Inland Empire Comfort", accent: ACCENT },
+  { src: "/portfolio/omega-tax.png", platform: "INSTAGRAM", brand: "Omega Mortgage", accent: ACCENT },
+  { src: "/portfolio/v2_02_myth_20pct.png", platform: "INSTAGRAM", brand: "Stephanie Perez Home Loans", accent: ACCENT },
+  { src: "/portfolio/v5_06f_myth_busted.png", platform: "INSTAGRAM", brand: "Inland Empire Comfort", accent: ACCENT },
+  { src: "/portfolio/v1_01_bright_canary_explainer.png", platform: "INSTAGRAM", brand: "Cyber Safety Cop", accent: ACCENT },
+  { src: "/portfolio/v6_07_mothers_day.png", platform: "INSTAGRAM", brand: "Inland Empire Comfort", accent: ACCENT },
 ];
 
 const BEAT_MS = 2800;
@@ -31,8 +34,6 @@ const STACK_POSITIONS = [
 
 export default function ContentEngine() {
   const [active, setActive] = useState(0);
-  const [followers, setFollowers] = useState(0);
-  const [engagements, setEngagements] = useState(0);
   const [phase, setPhase] = useState<"intro" | "loop">("intro");
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -40,20 +41,13 @@ export default function ContentEngine() {
   const my = useMotionValue(0);
   const smx = useSpring(mx, { stiffness: 60, damping: 20 });
   const smy = useSpring(my, { stiffness: 60, damping: 20 });
-  const tiltX = useTransform(smy, [-1, 1], [8, -8]);
-  const tiltY = useTransform(smx, [-1, 1], [-12, 12]);
+  const tiltX = useTransform(smy, [-1, 1], [3, -3]);
+  const tiltY = useTransform(smx, [-1, 1], [-5, 5]);
 
   // Intro sequence — one-shot on mount
   useEffect(() => {
-    const counterTimer = setTimeout(() => {
-      setFollowers(18472);
-      setEngagements(2347);
-    }, 1100);
     const phaseTimer = setTimeout(() => setPhase("loop"), 1800);
-    return () => {
-      clearTimeout(counterTimer);
-      clearTimeout(phaseTimer);
-    };
+    return () => clearTimeout(phaseTimer);
   }, []);
 
   // Beat cycle — only runs after intro completes
@@ -61,8 +55,6 @@ export default function ContentEngine() {
     if (phase !== "loop") return;
     const id = setInterval(() => {
       setActive((a) => (a + 1) % SLIDES.length);
-      setFollowers((f) => f + Math.floor(40 + Math.random() * 180));
-      setEngagements((e) => e + Math.floor(80 + Math.random() * 260));
     }, BEAT_MS);
     return () => clearInterval(id);
   }, [phase]);
@@ -91,6 +83,7 @@ export default function ContentEngine() {
   return (
     <div
       ref={containerRef}
+      aria-hidden="true"
       style={{
         position: "relative",
         width: "100%",
@@ -168,9 +161,10 @@ export default function ContentEngine() {
               }}
               transition={{
                 type: "spring",
-                stiffness: phase === "intro" ? 70 : 90,
-                damping: phase === "intro" ? 16 : 18,
+                stiffness: 90,
+                damping: 20,
                 mass: 0.9,
+                bounce: 0,
                 delay: phase === "intro" ? introDelay : 0,
               }}
               style={{
@@ -186,45 +180,16 @@ export default function ContentEngine() {
                 willChange: "transform, filter, opacity",
               }}
             >
-              <img
+              <Image
                 src={slide.src}
                 alt=""
+                fill
+                sizes="(max-width: 960px) 80vw, 340px"
                 draggable={false}
+                priority={offset === 0}
                 style={{
-                  width: "100%",
-                  height: "100%",
                   objectFit: "cover",
-                  display: "block",
                   userSelect: "none",
-                }}
-              />
-              {/* Chromatic flash on hero entry */}
-              {offset === 0 && (
-                <motion.div
-                  key={`flash-${active}`}
-                  initial={{ opacity: 0.6 }}
-                  animate={{ opacity: 0 }}
-                  transition={{ duration: 0.55, ease: "easeOut" }}
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    background: `linear-gradient(120deg, transparent 30%, ${slide.accent}55 50%, transparent 70%)`,
-                    mixBlendMode: "screen",
-                    pointerEvents: "none",
-                  }}
-                />
-              )}
-              {/* Film grain */}
-              <div
-                aria-hidden
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background:
-                    "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/></svg>\")",
-                  opacity: 0.12,
-                  mixBlendMode: "overlay",
-                  pointerEvents: "none",
                 }}
               />
             </motion.div>
@@ -250,20 +215,18 @@ export default function ContentEngine() {
         <AnimatePresence mode="wait">
           <motion.div
             key={`platform-${active}`}
-            initial={{ opacity: 0, y: -8, filter: "blur(8px)" }}
+            initial={{ opacity: 0, y: -8, filter: "blur(6px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: 6, filter: "blur(6px)" }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            exit={{ opacity: 0, y: 3, filter: "blur(3px)" }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: 8,
               padding: "6px 12px",
               borderRadius: 999,
-              background: "rgba(255,255,255,0.06)",
+              background: "rgba(255,255,255,0.04)",
               border: `1px solid ${heroSlide.accent}55`,
-              backdropFilter: "blur(10px)",
-              WebkitBackdropFilter: "blur(10px)",
               fontSize: 10,
               fontWeight: 700,
               letterSpacing: "0.22em",
@@ -287,10 +250,10 @@ export default function ContentEngine() {
         <AnimatePresence mode="wait">
           <motion.div
             key={`brand-${active}`}
-            initial={{ opacity: 0, y: -6, filter: "blur(6px)" }}
+            initial={{ opacity: 0, y: -6, filter: "blur(4px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: 6, filter: "blur(4px)" }}
-            transition={{ duration: 0.5, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+            exit={{ opacity: 0, y: 2, filter: "blur(2px)" }}
+            transition={{ duration: 0.45, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
             style={{
               fontSize: 13,
               fontWeight: 500,
@@ -303,99 +266,9 @@ export default function ContentEngine() {
         </AnimatePresence>
       </motion.div>
 
-      {/* Rolling counters — bottom right */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 1.05, ease: [0.22, 1, 0.36, 1] }}
-        style={{
-          position: "absolute",
-          bottom: "8%",
-          right: "2%",
-          zIndex: 4,
-          display: "flex",
-          flexDirection: "column",
-          gap: 16,
-          alignItems: "flex-end",
-        }}
-      >
-        <Counter label="Followers" value={followers} accent={heroSlide.accent} />
-        <Counter label="Engagements" value={engagements} accent={heroSlide.accent} />
-      </motion.div>
-
       {/* Corner ticks */}
       <CornerTicks />
     </div>
-  );
-}
-
-function Counter({ label, value, accent }: { label: string; value: number; accent: string }) {
-  const digits = value.toLocaleString().split("");
-  return (
-    <div style={{ textAlign: "right" }}>
-      <div
-        style={{
-          fontSize: 9,
-          fontWeight: 700,
-          letterSpacing: "0.28em",
-          color: "rgba(180,180,200,0.6)",
-          textTransform: "uppercase",
-          marginBottom: 4,
-        }}
-      >
-        + {label}
-      </div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          gap: 0,
-          fontFamily: "var(--font-anton), 'Anton', monospace",
-          fontSize: 28,
-          fontWeight: 400,
-          color: "white",
-          lineHeight: 1,
-          filter: `drop-shadow(0 2px 12px ${accent}55)`,
-        }}
-      >
-        {digits.map((d, i) => (
-          <DigitRoller key={`${i}-${digits.length}`} char={d} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function DigitRoller({ char }: { char: string }) {
-  if (!/[0-9]/.test(char)) {
-    return <span style={{ display: "inline-block", width: 8 }}>{char}</span>;
-  }
-  const n = parseInt(char, 10);
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        width: 16,
-        height: 28,
-        overflow: "hidden",
-        position: "relative",
-      }}
-    >
-      <motion.span
-        animate={{ y: -n * 28 }}
-        transition={{ type: "spring", stiffness: 140, damping: 20, mass: 0.8 }}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          lineHeight: "28px",
-          willChange: "transform",
-        }}
-      >
-        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
-          <span key={d} style={{ height: 28, textAlign: "center" }}>{d}</span>
-        ))}
-      </motion.span>
-    </span>
   );
 }
 

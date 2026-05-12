@@ -52,8 +52,7 @@ export default async function OnboardingLayout({
     return (
       <div className="dark min-h-screen bg-background text-foreground">
         <main className="mx-auto flex max-w-md flex-col items-center px-6 py-24 text-center">
-          <span className="mb-6 inline-block size-2 rounded-full bg-gradient-to-br from-[#b18bff] to-[#3b81ff]" />
-          <h1 className="text-2xl font-semibold tracking-tight">
+                    <h1 className="text-2xl font-semibold tracking-tight">
             Invite required
           </h1>
           <p className="mt-3 text-sm text-muted-foreground">{access.reason}</p>
@@ -70,16 +69,19 @@ export default async function OnboardingLayout({
 
   return (
     <div className="dark min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+      <header
+        className="sticky top-0 z-40 border-b"
+        style={{ borderColor: "#1a1a2e", backgroundColor: "rgba(7,7,14,0.96)" }}
+      >
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
           <Link
             href="/"
-            className="flex items-center gap-2 text-sm font-semibold tracking-tight"
+            className="flex items-baseline gap-2 tracking-tight"
+            style={{ color: "white", fontSize: "22px", fontWeight: 600, letterSpacing: "-0.02em" }}
           >
-            <span className="inline-block size-2 rounded-full bg-gradient-to-br from-[#b18bff] to-[#3b81ff]" />
             SocialPulse
           </Link>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs" style={{ color: "#9999a6" }}>
             {access.admin ? "Admin · internal kit" : `Onboarding · ${access.brandName}`}
           </span>
         </div>

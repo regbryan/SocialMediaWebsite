@@ -43,10 +43,15 @@ export default function ConfirmStep() {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || `Submit failed (${res.status})`);
       }
-      const { slug: returnedSlug, dashboardUrl } = await res.json();
+      const {
+        slug: returnedSlug,
+        dashboardUrl,
+        pendingReview,
+      } = await res.json();
       reset();
       const params = new URLSearchParams({ slug: returnedSlug });
       if (dashboardUrl) params.set("dash", dashboardUrl);
+      if (pendingReview) params.set("pending", "1");
       router.push(`/onboarding/done?${params.toString()}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");

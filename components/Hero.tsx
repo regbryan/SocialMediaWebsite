@@ -15,40 +15,6 @@ export default function Hero() {
         justifyContent: "center",
       }}
     >
-      {/* Ambient floating orbs — purple + blue brand */}
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          top: "18%",
-          left: "8%",
-          width: "384px",
-          height: "384px",
-          borderRadius: "50%",
-          background: "#8b5cff",
-          opacity: 0.18,
-          filter: "blur(120px)",
-          animation: "hero-orb-float 6s ease-in-out infinite",
-          pointerEvents: "none",
-        }}
-      />
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          bottom: "12%",
-          right: "10%",
-          width: "384px",
-          height: "384px",
-          borderRadius: "50%",
-          background: "#3b81ff",
-          opacity: 0.16,
-          filter: "blur(120px)",
-          animation: "hero-orb-float 6s ease-in-out infinite 3s",
-          pointerEvents: "none",
-        }}
-      />
-
       <div
         className="mx-auto hero-grid"
         style={{
@@ -74,19 +40,17 @@ export default function Hero() {
               color: "white",
               margin: 0,
               fontWeight: 400,
+              textWrap: "balance",
             }}
           >
-            Content
-            <br />
+            Posts That{" "}
             <span
               style={{
-                WebkitTextStroke: "1.5px #c084fc",
+                WebkitTextStroke: "0.75px rgba(177, 139, 255, 0.7)",
                 color: "transparent",
               }}
             >
-              That
-              <br />
-              Converts
+              Work.
             </span>
           </h1>
 
@@ -114,7 +78,7 @@ export default function Hero() {
                 margin: 0,
               }}
             >
-              Scroll-stopping social content — 5 to 7 posts per week across Instagram, LinkedIn &amp; more.
+              5 to 7 posts a week. On schedule. Approved by you.
             </p>
 
             <a
@@ -144,7 +108,7 @@ export default function Hero() {
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                style={{ animation: "hero-arrow-bounce 2s ease-in-out infinite" }}
+                style={{ marginTop: "-1px" }}
               >
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <polyline points="5 12 12 19 19 12" />
@@ -167,14 +131,6 @@ export default function Hero() {
       </div>
 
       <style>{`
-        @keyframes hero-orb-float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-20px); }
-        }
-        @keyframes hero-arrow-bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(4px); }
-        }
         .hero-arrow:hover {
           background: white;
           color: #07070e;

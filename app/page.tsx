@@ -11,7 +11,7 @@ import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
-    <main style={{ backgroundColor: "#07070e" }}>
+    <main id="main" style={{ backgroundColor: "#07070e" }}>
       <Navbar />
       <Hero />
       <LogoBar />

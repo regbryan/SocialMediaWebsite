@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { ShinyButton } from "@/components/ui/shiny-button";
 
 export default function Navbar() {
@@ -10,9 +11,7 @@ export default function Navbar() {
     <nav
       className="fixed top-0 left-0 right-0 z-50"
       style={{
-        backgroundColor: "rgba(7,7,14,0.85)",
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
+        backgroundColor: "rgba(7,7,14,0.96)",
         borderBottom: "1px solid #1a1a2e",
       }}
     >
@@ -28,9 +27,9 @@ export default function Navbar() {
       <span
         style={{
           color: "white",
-          fontSize: "22px",
-          fontWeight: 700,
-          letterSpacing: "-0.01em",
+          fontSize: "28px",
+          fontWeight: 600,
+          letterSpacing: "-0.02em",
         }}
       >
         SocialPulse
@@ -74,7 +73,7 @@ export default function Navbar() {
         >
           Client Login
         </a>
-        <ShinyButton onClick={() => (window.location.hash = "#contact")}>
+        <ShinyButton onClick={() => (window.location.href = "/start")}>
           Get Started
         </ShinyButton>
       </div>
@@ -125,8 +124,13 @@ export default function Navbar() {
       </button>
 
       {/* Mobile menu */}
+      <AnimatePresence>
       {menuOpen && (
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: -8, filter: "blur(4px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          exit={{ opacity: 0, y: -4, filter: "blur(2px)" }}
+          transition={{ type: "spring", duration: 0.35, bounce: 0 }}
           className="absolute md:hidden flex flex-col"
           style={{
             top: "100%",
@@ -136,6 +140,7 @@ export default function Navbar() {
             borderBottom: "1px solid #1a1a2e",
             padding: "24px",
             gap: "16px",
+            transformOrigin: "top center",
           }}
         >
           {["Portfolio", "Services", "Pricing", "About"].map((link) => (
@@ -168,8 +173,8 @@ export default function Navbar() {
             Client Login
           </a>
           <a
-            href="#contact"
-            className="btn-gradient"
+            href="/start"
+            className="sp-shiny"
             style={{
               display: "block",
               textAlign: "center",
@@ -179,8 +184,9 @@ export default function Navbar() {
           >
             Get Started
           </a>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
     </nav>
   );

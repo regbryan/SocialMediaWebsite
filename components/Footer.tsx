@@ -16,9 +16,9 @@ const footerSections: { heading: string; links: FooterLink[] }[] = [
   {
     heading: "Company",
     links: [
-      { label: "About Us" },
       { label: "Portfolio", href: "#portfolio" },
-      { label: "Pricing" },
+      { label: "Pricing", href: "#pricing" },
+      { label: "How We Work", href: "#process" },
       { label: "Contact", href: "#contact" },
     ],
   },
@@ -26,8 +26,6 @@ const footerSections: { heading: string; links: FooterLink[] }[] = [
     heading: "Connect",
     links: [
       { label: "Client Login", href: "https://dashboard-eight-theta-24.vercel.app/", external: true },
-      { label: "Instagram" },
-      { label: "LinkedIn" },
       { label: "Email Us", href: "mailto:hello@socialpulse.media" },
     ],
   },
@@ -113,7 +111,7 @@ export default function Footer() {
             margin: 0,
           }}
         >
-          © 2026 SocialPulse Media. All rights reserved.
+          © {new Date().getFullYear()} SocialPulse Media. All rights reserved.
         </p>
       </div>
     </footer>

@@ -1,7 +1,4 @@
-"use client";
-
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
 
 const logos = [
   { src: "/logos/blitz.png", alt: "Blitz Organization" },
@@ -12,30 +9,9 @@ const logos = [
   { src: "/logos/csc.png", alt: "Cyber Safety Cop" },
 ];
 
-// Duplicate once for seamless CSS loop
 const loopedLogos = [...logos, ...logos];
 
 export default function LogoBar() {
-  // "forward" = scrolling left (default when page scrolls down or idle)
-  // "reverse" = scrolling right (when page scrolls up)
-  const [direction, setDirection] = useState<"forward" | "reverse">("forward");
-  const lastYRef = useRef(0);
-
-  useEffect(() => {
-    lastYRef.current = window.scrollY;
-    const onScroll = () => {
-      const y = window.scrollY;
-      const delta = y - lastYRef.current;
-      // Ignore tiny deltas so the direction doesn't flap on micro-movements
-      if (Math.abs(delta) > 2) {
-        setDirection(delta > 0 ? "forward" : "reverse");
-      }
-      lastYRef.current = y;
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
     <section
       style={{
@@ -51,12 +27,8 @@ export default function LogoBar() {
         style={{ maxWidth: "1280px", gap: "36px" }}
       >
         <span
+          className="eyebrow"
           style={{
-            color: "#9999a6",
-            fontSize: "13px",
-            fontWeight: 600,
-            letterSpacing: "3px",
-            textTransform: "uppercase",
             textAlign: "center",
             padding: "0 clamp(24px, 6vw, 120px)",
           }}
@@ -65,7 +37,6 @@ export default function LogoBar() {
         </span>
       </div>
 
-      {/* Auto-scrolling strip — reverses direction with page scroll direction */}
       <div
         style={{
           position: "relative",
@@ -73,7 +44,6 @@ export default function LogoBar() {
           marginTop: "36px",
         }}
       >
-        {/* Fade edges */}
         <div
           style={{
             position: "absolute",
@@ -93,7 +63,6 @@ export default function LogoBar() {
             width: "max-content",
             alignItems: "center",
             animation: "logoMarquee 32s linear infinite",
-            animationDirection: direction === "forward" ? "normal" : "reverse",
             willChange: "transform",
           }}
         >
@@ -111,7 +80,6 @@ export default function LogoBar() {
                   style={{
                     objectFit: "contain",
                     filter: "brightness(0) invert(1)",
-                    opacity: 0.6,
                   }}
                 />
               </div>
@@ -124,6 +92,9 @@ export default function LogoBar() {
         @keyframes logoMarquee {
           from { transform: translateX(0); }
           to   { transform: translateX(-50%); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .logo-strip { animation: none !important; }
         }
       `}</style>
     </section>

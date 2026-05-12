@@ -68,7 +68,7 @@ export default function ContactForm() {
         </ShinyButton>
         {status === "success" && (
           <span style={{ fontSize: "13px", color: "#a5f3c4" }}>
-            Thanks — we&apos;ll get back to you within one business day.
+            Thanks. We&apos;ll get back to you within one business day.
           </span>
         )}
         {status === "error" && (

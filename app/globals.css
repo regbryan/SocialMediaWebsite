@@ -82,11 +82,6 @@ body {
   margin: 0;
 }
 
-.display-heading .accent {
-  -webkit-text-stroke: 1.5px #c084fc;
-  color: transparent;
-}
-
 .logo-mono {
   filter: brightness(0) invert(1);
   opacity: 0.55;
@@ -94,15 +89,6 @@ body {
 }
 .logo-mono:hover {
   opacity: 1;
-}
-
-.eyebrow {
-  font-family: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: #9999a6;
 }
 
 /* Custom scrollbar */
@@ -118,14 +104,6 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #8b5cff;
-}
-
-/* Gradient text */
-.gradient-text {
-  background: linear-gradient(120deg, #b18bff 0%, #8b5cff 50%, #3b81ff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 /* Gradient button with glow */
@@ -169,7 +147,7 @@ body {
     0 10px 28px -10px rgba(139,92,255,0.6);
 }
 .sp-shiny:active {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.97);
 }
 
 .sp-shiny--secondary {
@@ -208,6 +186,9 @@ body {
   border-color: rgba(255, 255, 255, 0.15) !important;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
 }
+.portfolio-card:active {
+  transform: translateY(-2px) scale(0.985);
+}
 .portfolio-card .portfolio-img {
   transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
@@ -224,9 +205,7 @@ body {
 
 /* Preview button */
 .preview-btn {
-  background: rgba(15, 15, 26, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(15, 15, 26, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.25);
   color: white;
   padding: 10px 20px;
@@ -243,6 +222,9 @@ body {
   color: #07070e;
   border-color: white;
   transform: scale(1.05);
+}
+.preview-btn:active {
+  transform: scale(0.97);
 }
 
 /* Ambient hero glow */
@@ -272,13 +254,13 @@ body {
   animation: shimmer 2.8s ease-in-out infinite;
 }
 
-/* Fade in on load */
+/* Fade in on load — Jakub enter recipe */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(8px); filter: blur(4px); }
+  to   { opacity: 1; transform: translateY(0);   filter: blur(0);   }
 }
 .fade-up {
-  animation: fadeUp 0.8s ease-out both;
+  animation: fadeUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* Lightbox */
@@ -381,6 +363,65 @@ body {
   color: white;
 }
 
+/* Keyboard focus — visible for tab users, invisible for mouse clicks */
+:focus-visible {
+  outline: 2px solid #b18bff;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Skip-to-content link — visible only when focused */
+.skip-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1000;
+  background: #0f0f1a;
+  color: white;
+  padding: 10px 16px;
+  border: 1px solid #8b5cff;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transform: translateY(-200%);
+  transition: transform 0.2s ease;
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+/* Eyebrow — small caps label above section headings */
+.eyebrow {
+  font-family: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #9999a6;
+}
+
+/* Honor prefers-reduced-motion across all decorative motion */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .logo-strip,
+  .marquee-wrapper > div,
+  .silver-frame,
+  .badge-shimmer,
+  .fade-up {
+    animation: none !important;
+  }
+  .hero-glow {
+    animation: none !important;
+  }
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
@@ -425,37 +466,39 @@ body {
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  /* Mapped to the SocialPulse landing-page palette so shadcn primitives
+     (Card, Badge, Table, Button) inherit brand colors automatically. */
+  --background: #07070e;
+  --foreground: #ffffff;
+  --card: #0f0f1a;
+  --card-foreground: #ffffff;
+  --popover: #0f0f1a;
+  --popover-foreground: #ffffff;
+  --primary: #8b5cff;
+  --primary-foreground: #ffffff;
+  --secondary: #1a1a2e;
+  --secondary-foreground: #ffffff;
+  --muted: #0f0f1a;
+  --muted-foreground: #9999a6;
+  --accent: #261a40;
+  --accent-foreground: #ffffff;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: #1a1a2e;
+  --input: #1a1a2e;
+  --ring: #8b5cff;
+  --chart-1: #8b5cff;
+  --chart-2: #b18bff;
+  --chart-3: #3b81ff;
+  --chart-4: #9999a6;
+  --chart-5: #bfbfcc;
+  --sidebar: #0f0f1a;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #8b5cff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #261a40;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #1a1a2e;
+  --sidebar-ring: #8b5cff;
 }
 
 @layer base {

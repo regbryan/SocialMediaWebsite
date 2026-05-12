@@ -33,11 +33,11 @@ type InviteRow = {
 export const dynamic = "force-dynamic";
 
 function statusOf(r: InviteRow): { label: string; tone: "default" | "secondary" | "outline" | "destructive" } {
-  if (r.revoked_at) return { label: "revoked", tone: "destructive" };
-  if (r.used_at) return { label: "used", tone: "default" };
+  if (r.revoked_at) return { label: "Revoked", tone: "destructive" };
+  if (r.used_at) return { label: "Used", tone: "default" };
   if (new Date(r.expires_at).getTime() < Date.now())
-    return { label: "expired", tone: "outline" };
-  return { label: "active", tone: "secondary" };
+    return { label: "Expired", tone: "outline" };
+  return { label: "Active", tone: "secondary" };
 }
 
 export default async function InvitesPage() {
@@ -71,8 +71,7 @@ export default async function InvitesPage() {
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Invites</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Generate a one-time link a client uses to fill onboarding. Single-use,
-          time-bound, and tied to a slug.
+          One-time links for clients to start onboarding. They expire when used.
         </p>
       </div>
 
@@ -80,8 +79,7 @@ export default async function InvitesPage() {
         <CardHeader>
           <CardTitle className="text-base">New invite</CardTitle>
           <CardDescription>
-            Client enters brand details on the invite page; their email becomes
-            their dashboard login.
+            The client&apos;s email becomes their dashboard login.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -92,7 +90,7 @@ export default async function InvitesPage() {
       {rows.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-muted-foreground">
-            No invites yet.
+            No invites sent yet.
           </CardContent>
         </Card>
       ) : (
@@ -127,7 +125,7 @@ export default async function InvitesPage() {
                       <Badge variant={s.tone}>{s.label}</Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      {s.label === "active" ? (
+                      {s.label === "Active" ? (
                         <RevokeButton id={r.id} />
                       ) : null}
                     </TableCell>

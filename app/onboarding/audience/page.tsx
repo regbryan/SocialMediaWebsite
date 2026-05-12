@@ -103,7 +103,7 @@ export default function AudienceStep() {
               />
               <Textarea
                 rows={2}
-                placeholder="Pain points — one per line"
+                placeholder="Pain points, one per line"
                 value={a.pain_points.join("\n")}
                 onChange={(e) =>
                   setAudience(tier, {
@@ -193,7 +193,7 @@ export default function AudienceStep() {
               <Label className="capitalize">{k.replace("_", " ")}</Label>
               <Textarea
                 rows={2}
-                placeholder="Space or comma separated — no # needed"
+                placeholder="Space or comma separated. No # needed."
                 value={draft.hashtags[k].join(" ")}
                 onChange={(e) => setHashtags(k, e.target.value)}
               />

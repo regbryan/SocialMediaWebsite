@@ -34,12 +34,17 @@ function normalizeHandle(raw: string): string {
   return raw.trim().replace(/^@/, "").toLowerCase();
 }
 
-export async function fetchIgProfile(rawHandle: string): Promise<IgProfile> {
+export async function fetchIgProfile(
+  rawHandle: string,
+  opts: { forceRefetch?: boolean } = {}
+): Promise<IgProfile> {
   const handle = normalizeHandle(rawHandle);
   if (!handle) throw new Error("Handle is required");
 
-  const cached = await readCache(handle);
-  if (cached) return cached;
+  if (!opts.forceRefetch) {
+    const cached = await readCache(handle);
+    if (cached) return cached;
+  }
 
   const fresh = await fetchFromSidecar(handle);
   await writeCache(handle, fresh);

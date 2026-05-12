@@ -20,7 +20,7 @@ const testimonials = [
     title: "Owner",
     company: "Inland Empire Comfort",
     initials: "MT",
-    accent: "#3b81ff",
+    accent: "#8b5cff",
   },
   {
     quote:
@@ -29,11 +29,9 @@ const testimonials = [
     title: "Managing Partner",
     company: "Mitchell Legal",
     initials: "DM",
-    accent: "#b18bff",
+    accent: "#8b5cff",
   },
 ];
-
-const AUTO_ADVANCE_MS = 6500;
 
 function Stars() {
   return (
@@ -87,7 +85,6 @@ function Arrow({ dir, onClick, label }: { dir: "left" | "right"; onClick: () => 
 export default function Testimonials() {
   const [idx, setIdx] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
-  const [paused, setPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
   const go = (next: number) => {
@@ -98,15 +95,6 @@ export default function Testimonials() {
   };
   const next = () => go(idx + 1);
   const prev = () => go(idx - 1);
-
-  useEffect(() => {
-    if (paused) return;
-    const id = setInterval(() => {
-      setDirection(1);
-      setIdx((i) => (i + 1) % testimonials.length);
-    }, AUTO_ADVANCE_MS);
-    return () => clearInterval(id);
-  }, [paused]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -131,44 +119,18 @@ export default function Testimonials() {
         className="mx-auto flex flex-col"
         style={{ maxWidth: "1280px", gap: "48px" }}
       >
-        {/* Header */}
-        <div className="flex flex-col items-center text-center" style={{ gap: "14px" }}>
-          <span
-            style={{
-              color: "#8b5cff",
-              fontSize: "13px",
-              fontWeight: 600,
-              letterSpacing: "3px",
-              textTransform: "uppercase",
-            }}
-          >
-            Client Love
-          </span>
-          <h2
-            className="display-heading"
-            style={{ fontSize: "clamp(48px, 7vw, 88px)" }}
-          >
-            What Our Clients <span className="accent">Say</span>
-          </h2>
-          <p
-            style={{
-              color: "#9999a6",
-              fontSize: "17px",
-              lineHeight: 1.5,
-              margin: 0,
-              maxWidth: "540px",
-            }}
-          >
-            Real feedback from the brands we work with every day.
-          </p>
-        </div>
+        {/* Header — single-line statement */}
+        <h2
+          className="display-heading"
+          style={{ fontSize: "clamp(48px, 7vw, 88px)", textAlign: "center" }}
+        >
+          People who pay us every month.
+        </h2>
 
         {/* Carousel */}
         <div
           className="flex items-center"
           style={{ gap: "20px", justifyContent: "center" }}
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
           onTouchStart={(e) => (touchStartX.current = e.touches[0].clientX)}
           onTouchEnd={(e) => {
             if (touchStartX.current == null) return;
@@ -307,13 +269,15 @@ export default function Testimonials() {
                   onClick={() => go(i)}
                   aria-label={`Go to testimonial ${i + 1}`}
                   style={{
-                    width: active ? "28px" : "8px",
+                    width: "28px",
                     height: "8px",
                     borderRadius: "999px",
                     border: "none",
-                    background: active ? "linear-gradient(90deg, #8b5cff, #3b81ff)" : "rgba(255,255,255,0.15)",
+                    background: active ? "#8b5cff" : "rgba(255,255,255,0.15)",
+                    transform: active ? "scaleX(1)" : "scaleX(0.286)",
+                    transformOrigin: "left center",
                     cursor: "pointer",
-                    transition: "width 0.35s cubic-bezier(0.22, 1, 0.36, 1), background 0.35s",
+                    transition: "transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), background 0.35s",
                     padding: 0,
                   }}
                 />

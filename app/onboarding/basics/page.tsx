@@ -87,7 +87,7 @@ export default function BasicsStep() {
             "",
         },
       });
-      setScrapeNote("Pulled brand info — review in the next step.");
+      setScrapeNote("Got it. Review the details on the next step.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Fetch failed");
     } finally {
@@ -136,7 +136,7 @@ export default function BasicsStep() {
         },
       });
       setIgNote(
-        `Pulled @${draft.igHandle} (${p.source}) — ${p.follower_count ?? 0} followers.`
+        `Found @${draft.igHandle}. ${p.follower_count ?? 0} followers.`
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : "IG fetch failed");
@@ -165,8 +165,8 @@ export default function BasicsStep() {
           Let&apos;s find your brand
         </h2>
         <p className="text-sm text-muted-foreground">
-          Give us your website and handle — we&apos;ll pull in your logo,
-          colors, and profile automatically.
+          Drop in your website and handle. We&apos;ll pull your logo, colors,
+          and profile automatically.
         </p>
         {invite && (
           <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/40 px-3 py-1 text-xs text-muted-foreground">
@@ -222,7 +222,7 @@ export default function BasicsStep() {
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          We&apos;ll scrape it for logo, colors, and copy.
+          We&apos;ll read it for logo, colors, and copy.
         </p>
         {scrapeNote && (
           <p className="text-xs text-emerald-400">{scrapeNote}</p>
@@ -258,7 +258,7 @@ export default function BasicsStep() {
         </div>
         <p className="text-xs text-muted-foreground">
           {requiresIg
-            ? "Public profile only — no password needed."
+            ? "Public profile only. No password needed."
             : "Public profile handle on your primary platform."}
         </p>
         {igNote && <p className="text-xs text-emerald-400">{igNote}</p>}
@@ -274,7 +274,7 @@ export default function BasicsStep() {
           onChange={(e) => patch({ hqLocation: e.target.value })}
         />
         <p className="text-xs text-muted-foreground">
-          City or region — used for local content and hashtags.
+          City or region. Used for local content and hashtags.
         </p>
       </div>
 

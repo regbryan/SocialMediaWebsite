@@ -18,10 +18,7 @@ const wordStyle: React.CSSProperties = {
   fontWeight: 900,
   letterSpacing: "-0.03em",
   lineHeight: 1,
-  background: "linear-gradient(135deg, #c084fc 0%, #8b5cff 35%, #3b81ff 100%)",
-  WebkitBackgroundClip: "text",
-  backgroundClip: "text",
-  WebkitTextFillColor: "transparent",
+  color: "#ffffff",
   whiteSpace: "nowrap",
   willChange: "transform, filter, opacity",
 };

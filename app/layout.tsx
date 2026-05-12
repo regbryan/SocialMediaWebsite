@@ -38,7 +38,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn(inter.variable, anton.variable, jakarta.variable, "font-sans", geist.variable)}>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <a href="#main" className="skip-link">Skip to content</a>
+        {children}
+      </body>
     </html>
   );
 }

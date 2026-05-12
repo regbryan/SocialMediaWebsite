@@ -2,6 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabaseAdmin } from "../../../lib/supabase-admin";
 import {
+  canViewKit,
+  resolveDashboardUser,
+} from "../../../lib/dashboard-auth";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -12,12 +16,23 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import {
+  engagementRate,
+  engagementTone,
+  formatEngagementRate,
+  relativeTimeFrom,
+} from "../../../lib/competitor-metrics";
+import type { IgPost } from "../../../lib/scrape-ig";
+import CompetitorRefreshButton from "./CompetitorRefreshButton";
+import SidecarStatus from "./SidecarStatus";
+import CompetitorSuggester from "./CompetitorSuggester";
 
 type BrandKit = {
   id: string;
   slug: string;
   name: string;
   primary_platform: string;
+  tier: string | null;
   tagline: string | null;
   positioning: string | null;
   description: string | null;
@@ -52,6 +67,9 @@ type CachedProfile = {
   is_business: boolean | null;
   profile_pic_url: string | null;
   biography: string | null;
+  top_posts: IgPost[];
+  fetched_at: string | null;
+  engagement_rate: number | null;
 };
 
 export const dynamic = "force-dynamic";
@@ -62,12 +80,16 @@ export default async function BrandKitDetail({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+
+  const user = await resolveDashboardUser();
+  if (!canViewKit(user, slug)) notFound();
+
   const sb = supabaseAdmin();
 
   const { data: kit, error } = await sb
     .from("brand_kits")
     .select(
-      "id, slug, name, primary_platform, tagline, positioning, description, ig_handle, ig_follower_count, ig_is_business, competitor_handles, colors, hq_location, audiences, content_pillars"
+      "id, slug, name, primary_platform, tier, tagline, positioning, description, ig_handle, ig_follower_count, ig_is_business, competitor_handles, colors, hq_location, audiences, content_pillars"
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -91,10 +113,13 @@ export default async function BrandKitDetail({
   if (competitorHandles.length) {
     const { data: cached } = await sb
       .from("ig_profile_cache")
-      .select("handle, payload")
+      .select("handle, payload, fetched_at")
       .in("handle", competitorHandles);
     competitors = (cached ?? []).map((c) => {
-      const p = c.payload as Partial<CachedProfile>;
+      const p = c.payload as Partial<CachedProfile> & {
+        top_posts?: IgPost[];
+      };
+      const posts = p.top_posts ?? [];
       return {
         handle: c.handle as string,
         full_name: p.full_name ?? null,
@@ -103,8 +128,16 @@ export default async function BrandKitDetail({
         is_business: p.is_business ?? null,
         profile_pic_url: p.profile_pic_url ?? null,
         biography: p.biography ?? null,
+        top_posts: posts,
+        fetched_at: (c.fetched_at as string | null) ?? null,
+        engagement_rate: engagementRate(posts, p.follower_count ?? null),
       };
     });
+    // Sort by engagement rate desc — the operator wants to see who's
+    // actually winning attention, not just who has the largest audience.
+    competitors.sort(
+      (a, b) => (b.engagement_rate ?? -1) - (a.engagement_rate ?? -1)
+    );
   }
 
   const maxFollowers = Math.max(
@@ -115,43 +148,39 @@ export default async function BrandKitDetail({
 
   return (
     <div className="space-y-10">
-      <div>
-        <Link
-          href="/dashboard"
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          ← All brand kits
-        </Link>
-        <div className="mt-4 flex flex-wrap items-start justify-between gap-6">
-          <div>
-            <h1 className="text-4xl font-semibold tracking-tight">{k.name}</h1>
-            {k.tagline && (
-              <p className="mt-2 max-w-xl text-muted-foreground">{k.tagline}</p>
-            )}
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Badge variant="secondary" className="capitalize">
-                {k.primary_platform}
-              </Badge>
-              {k.ig_handle && <Badge variant="outline">@{k.ig_handle}</Badge>}
-              {k.hq_location && <Badge variant="outline">{k.hq_location}</Badge>}
-              {k.ig_is_business && <Badge>business</Badge>}
-            </div>
-          </div>
-          {k.colors?.primary && (
-            <Card className="px-4 py-3">
-              <div className="flex items-center gap-3">
-                <span
-                  className="size-8 rounded-md ring-1 ring-border"
-                  style={{ background: k.colors.primary }}
-                />
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground">Primary</span>
-                  <code className="text-xs font-medium">{k.colors.primary}</code>
-                </div>
-              </div>
-            </Card>
+      <div className="flex flex-wrap items-start justify-between gap-6">
+        <div>
+          {k.tagline && (
+            <p className="max-w-xl text-muted-foreground">{k.tagline}</p>
           )}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {k.tier && (
+              <Badge className="capitalize" style={{ background: "#8b5cff" }}>
+                {k.tier} plan
+              </Badge>
+            )}
+            <Badge variant="secondary" className="capitalize">
+              {k.primary_platform}
+            </Badge>
+            {k.ig_handle && <Badge variant="outline">@{k.ig_handle}</Badge>}
+            {k.hq_location && <Badge variant="outline">{k.hq_location}</Badge>}
+            {k.ig_is_business && <Badge>Business account</Badge>}
+          </div>
         </div>
+        {k.colors?.primary && (
+          <Card className="px-4 py-3">
+            <div className="flex items-center gap-3">
+              <span
+                className="size-8 rounded-md ring-1 ring-border"
+                style={{ background: k.colors.primary }}
+              />
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground">Primary</span>
+                <code className="text-xs font-medium">{k.colors.primary}</code>
+              </div>
+            </div>
+          </Card>
+        )}
       </div>
 
       {(k.positioning || k.description) && (
@@ -184,11 +213,15 @@ export default async function BrandKitDetail({
       )}
 
       <section>
-        <div className="mb-3 flex items-baseline justify-between gap-4">
+        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-3">
           <h2 className="text-xl font-semibold tracking-tight">Follower comparison</h2>
-          <span className="text-xs text-muted-foreground">
-            {competitors.length}/{competitorHandles.length} competitors hydrated
-          </span>
+          <div className="flex flex-wrap items-center gap-4">
+            <span className="text-xs text-muted-foreground">
+              {competitors.length} of {competitorHandles.length} competitor
+              profile{competitorHandles.length === 1 ? "" : "s"} loaded
+            </span>
+            {user.kind === "admin" && <SidecarStatus />}
+          </div>
         </div>
         <Card>
           <CardContent className="space-y-4 py-5">
@@ -201,8 +234,7 @@ export default async function BrandKitDetail({
             />
             {competitorHandles.length === 0 ? (
               <p className="pt-2 text-sm text-muted-foreground">
-                No competitors discovered yet. Deploy the IG sidecar and re-run
-                submit to populate.
+                No competitors listed for this kit yet.
               </p>
             ) : (
               competitorHandles.map((h) => {
@@ -215,7 +247,7 @@ export default async function BrandKitDetail({
                     value={match?.follower_count ?? 0}
                     max={maxFollowers}
                     muted={!match}
-                    suffix={match ? null : "not fetched"}
+                    suffix={match ? null : "not loaded"}
                   />
                 );
               })
@@ -224,52 +256,142 @@ export default async function BrandKitDetail({
         </Card>
       </section>
 
+      {user.kind === "admin" && (
+        <section>
+          <CompetitorSuggester
+            slug={k.slug}
+            seedHandle={k.ig_handle}
+            existing={competitorHandles}
+          />
+        </section>
+      )}
+
       {competitors.length > 0 && (
         <section>
           <h2 className="mb-3 text-xl font-semibold tracking-tight">
             Competitor profiles
           </h2>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {competitors.map((c) => (
-              <Card key={c.handle} className="transition hover:border-foreground/30">
-                <CardContent className="py-5">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="size-11">
-                      {c.profile_pic_url ? (
-                        <AvatarImage src={c.profile_pic_url} alt={c.handle} />
-                      ) : null}
-                      <AvatarFallback className="text-xs">
-                        {c.handle.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <div className="truncate font-medium">@{c.handle}</div>
-                      {c.full_name && (
-                        <div className="truncate text-xs text-muted-foreground">
-                          {c.full_name}
+            {competitors.map((c) => {
+              const tone = engagementTone(c.engagement_rate);
+              const toneColor =
+                tone === "strong"
+                  ? "#7ee787"
+                  : tone === "healthy"
+                    ? "#b18bff"
+                    : tone === "weak"
+                      ? "#f0a37a"
+                      : undefined;
+              return (
+                <Card
+                  key={c.handle}
+                  className="transition hover:border-foreground/30"
+                >
+                  <CardContent className="py-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <a
+                        href={`https://instagram.com/${c.handle}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex min-w-0 items-center gap-3 group"
+                      >
+                        <Avatar className="size-11">
+                          {c.profile_pic_url ? (
+                            <AvatarImage src={c.profile_pic_url} alt={c.handle} />
+                          ) : null}
+                          <AvatarFallback className="text-xs">
+                            {c.handle.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <div className="truncate font-medium group-hover:underline">
+                            @{c.handle}
+                          </div>
+                          {c.full_name && (
+                            <div className="truncate text-xs text-muted-foreground">
+                              {c.full_name}
+                            </div>
+                          )}
                         </div>
+                      </a>
+                      {user.kind === "admin" && (
+                        <CompetitorRefreshButton handle={c.handle} />
                       )}
                     </div>
-                  </div>
-                  <Separator className="my-4" />
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <MiniStat
-                      label="followers"
-                      value={c.follower_count?.toLocaleString() ?? "—"}
-                    />
-                    <MiniStat
-                      label="posts"
-                      value={c.post_count?.toLocaleString() ?? "—"}
-                    />
-                  </div>
-                  {c.biography && (
-                    <p className="mt-3 line-clamp-3 text-xs text-muted-foreground">
-                      {c.biography}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+                    <Separator className="my-4" />
+                    <div className="grid grid-cols-3 gap-3 text-sm">
+                      <MiniStat
+                        label="followers"
+                        value={c.follower_count?.toLocaleString() ?? "—"}
+                      />
+                      <MiniStat
+                        label="posts"
+                        value={c.post_count?.toLocaleString() ?? "—"}
+                      />
+                      <MiniStat
+                        label="engagement"
+                        value={formatEngagementRate(c.engagement_rate)}
+                        valueColor={toneColor}
+                      />
+                    </div>
+                    {c.biography && (
+                      <p className="mt-3 line-clamp-2 text-xs text-muted-foreground">
+                        {c.biography}
+                      </p>
+                    )}
+                    {c.top_posts.length > 0 && (
+                      <div className="mt-3 grid grid-cols-4 gap-1.5">
+                        {c.top_posts.slice(0, 4).map((post) => (
+                          <a
+                            key={post.code}
+                            href={post.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="group relative block overflow-hidden rounded-md border border-border bg-muted"
+                            style={{ aspectRatio: "1 / 1" }}
+                            title={
+                              post.caption
+                                ? post.caption.slice(0, 120)
+                                : "View on Instagram"
+                            }
+                          >
+                            {post.thumbnail_url ? (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img
+                                src={post.thumbnail_url}
+                                alt=""
+                                className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              />
+                            ) : (
+                              <div className="flex size-full items-center justify-center text-[9px] uppercase text-muted-foreground">
+                                {post.media_type}
+                              </div>
+                            )}
+                            <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/80 via-black/40 to-transparent px-1 py-1 text-[9px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+                              <span>♥ {compactNumber(post.like_count)}</span>
+                              <span>💬 {compactNumber(post.comment_count)}</span>
+                            </div>
+                            {post.media_type === "video" && (
+                              <span className="absolute right-1 top-1 rounded-sm bg-black/60 px-1 text-[8px] font-medium uppercase tracking-wider text-white">
+                                ▸
+                              </span>
+                            )}
+                            {post.media_type === "carousel" && (
+                              <span className="absolute right-1 top-1 rounded-sm bg-black/60 px-1 text-[8px] font-medium uppercase tracking-wider text-white">
+                                ▦
+                              </span>
+                            )}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    <div className="mt-3 text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Updated {relativeTimeFrom(c.fetched_at)}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </section>
       )}
@@ -395,11 +517,31 @@ function Bar({
   );
 }
 
-function MiniStat({ label, value }: { label: string; value: string }) {
+function compactNumber(n: number | null | undefined): string {
+  if (n === null || n === undefined) return "—";
+  if (n < 1_000) return String(n);
+  if (n < 1_000_000) return `${(n / 1_000).toFixed(n < 10_000 ? 1 : 0)}K`;
+  return `${(n / 1_000_000).toFixed(n < 10_000_000 ? 1 : 0)}M`;
+}
+
+function MiniStat({
+  label,
+  value,
+  valueColor,
+}: {
+  label: string;
+  value: string;
+  valueColor?: string;
+}) {
   return (
     <div>
       <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="font-medium tabular-nums">{value}</div>
+      <div
+        className="font-medium tabular-nums"
+        style={valueColor ? { color: valueColor } : undefined}
+      >
+        {value}
+      </div>
     </div>
   );
 }

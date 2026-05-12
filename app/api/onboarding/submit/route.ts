@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { supabaseAdmin } from "../../../../lib/supabase-admin";
 import { INVITE_COOKIE, verifyInvite } from "../../../../lib/invite-token";
 import { isAdmin } from "../../../../lib/require-admin";
+import { provisionClientAccess } from "../../../../lib/client-access";
 
 // Phase 4: upsert brand_kit, persist IG top_posts as assets, kick off competitor discovery.
 // Phase 5: gated by invite cookie OR admin session.
@@ -96,7 +97,13 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Invite required" }, { status: 401 });
   }
 
-  let inviteRow: { id: string; used_at: string | null; revoked_at: string | null } | null = null;
+  let inviteRow: {
+    id: string;
+    used_at: string | null;
+    revoked_at: string | null;
+    source: string;
+    tier: string | null;
+  } | null = null;
   if (invite) {
     if (invite.slug !== body.slug) {
       return Response.json(
@@ -106,7 +113,7 @@ export async function POST(request: NextRequest) {
     }
     const { data, error: lookupErr } = await supabaseAdmin()
       .from("brand_kit_invites")
-      .select("id, used_at, revoked_at")
+      .select("id, used_at, revoked_at, source, tier")
       .eq("jti", invite.jti)
       .maybeSingle();
     if (lookupErr || !data) {
@@ -118,8 +125,10 @@ export async function POST(request: NextRequest) {
     if (data.used_at) {
       return Response.json({ error: "Invite already used" }, { status: 403 });
     }
-    inviteRow = data;
+    inviteRow = data as typeof inviteRow;
   }
+
+  const isSelfServe = inviteRow?.source === "self-serve";
 
   const snap = body.igSnapshot;
   const row = {
@@ -159,6 +168,11 @@ export async function POST(request: NextRequest) {
     photography_direction: body.photographyDirection || null,
     logos: body.logos ?? {},
     onboarding_status: "in_progress" as const,
+    // Self-serve submissions land in the admin's review queue.
+    // Admin-issued invites skip review and auto-provision below.
+    review_status: isSelfServe ? ("pending" as const) : null,
+    // Carry the tier the client chose at /start (if any) onto the kit.
+    tier: inviteRow?.tier ?? null,
   };
 
   const sb = supabaseAdmin();
@@ -243,9 +257,10 @@ export async function POST(request: NextRequest) {
     console.warn("[onboarding/submit] brand mirror failed", brandErr.message);
   }
 
-  // If we have an invite (with email), provision dashboard access + magic link.
+  // Admin-issued invites auto-provision client access + magic link.
+  // Self-serve submissions wait for admin approval (handled by /api/admin/approve).
   let dashboardMagicLink: string | null = null;
-  if (invite && brandRow) {
+  if (invite && brandRow && !isSelfServe) {
     try {
       dashboardMagicLink = await provisionClientAccess({
         email: invite.email,
@@ -274,6 +289,7 @@ export async function POST(request: NextRequest) {
     slug: data.slug,
     ig_posts_persisted: snap?.top_posts.length ?? 0,
     via_invite: Boolean(inviteRow),
+    self_serve: isSelfServe,
     provisioned: Boolean(dashboardMagicLink),
   });
 
@@ -282,6 +298,7 @@ export async function POST(request: NextRequest) {
     id: data.id,
     slug: data.slug,
     dashboardUrl: dashboardMagicLink,
+    pendingReview: isSelfServe,
   });
   if (inviteRow) {
     res.headers.append(
@@ -292,65 +309,6 @@ export async function POST(request: NextRequest) {
     );
   }
   return res;
-}
-
-async function provisionClientAccess({
-  email,
-  brandId,
-}: {
-  email: string;
-  brandId: string;
-}): Promise<string | null> {
-  const sb = supabaseAdmin();
-  const dashboardBase = (process.env.DASHBOARD_URL || "").replace(/\/$/, "");
-  if (!dashboardBase) {
-    console.warn("[provision] DASHBOARD_URL not set — skipping magic link");
-    return null;
-  }
-
-  // 1. Resolve or create the auth user.
-  let userId: string | null = null;
-
-  // Look up via admin.listUsers (paginated). For small client counts this is fine.
-  const { data: list } = await sb.auth.admin.listUsers({ page: 1, perPage: 200 });
-  const existing = list?.users?.find(
-    (u) => u.email?.toLowerCase() === email.toLowerCase()
-  );
-  if (existing) {
-    userId = existing.id;
-  } else {
-    const { data: created, error: createErr } =
-      await sb.auth.admin.createUser({
-        email,
-        email_confirm: true,
-      });
-    if (createErr || !created.user) {
-      throw new Error(`createUser failed: ${createErr?.message ?? "unknown"}`);
-    }
-    userId = created.user.id;
-  }
-
-  // 2. Grant brand access (idempotent on (user_id, brand_id)).
-  const { error: accessErr } = await sb
-    .from("user_brand_access")
-    .upsert(
-      { user_id: userId, brand_id: brandId, role: "client" },
-      { onConflict: "user_id,brand_id" }
-    );
-  if (accessErr) {
-    throw new Error(`user_brand_access upsert: ${accessErr.message}`);
-  }
-
-  // 3. Mint a magic link that lands on the dashboard.
-  const { data: link, error: linkErr } = await sb.auth.admin.generateLink({
-    type: "magiclink",
-    email,
-    options: { redirectTo: `${dashboardBase}/auth/callback` },
-  });
-  if (linkErr || !link?.properties?.action_link) {
-    throw new Error(`generateLink: ${linkErr?.message ?? "no action_link"}`);
-  }
-  return link.properties.action_link;
 }
 
 async function discoverCompetitors(brandKitId: string, handle: string) {

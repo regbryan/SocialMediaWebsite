@@ -16,17 +16,18 @@ export default function CTASection() {
           className="flex flex-col items-center text-center"
           style={{
             backgroundColor: "#0f0f1a",
-            border: "1.5px solid rgba(139,92,255,0.6)",
+            border: "1px solid #1a1a2e",
             borderRadius: "24px",
             padding: "64px 40px",
             gap: "20px",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.45)",
           }}
         >
           <h2
             className="display-heading"
             style={{ fontSize: "clamp(44px, 6vw, 80px)", maxWidth: "900px" }}
           >
-            Ready to <span className="accent">Transform</span> Your Social Media?
+            Talk to us.
           </h2>
           <p
             style={{
@@ -37,8 +38,7 @@ export default function CTASection() {
               margin: 0,
             }}
           >
-            Let&apos;s build a content strategy that grows your brand. Book a free
-            consultation and see what we can do for you.
+            We&apos;ll plan your first 30 days for free. No commitment.
           </p>
           <div style={{ width: "100%", maxWidth: "560px", marginTop: "12px" }}>
             <ContactForm />
