@@ -42,3 +42,7 @@ next-env.d.ts
 
 .vercel
 .env*.local
+
+# claude code runtime
+.claude/scheduled_tasks.lock
+.claude/worktrees/
