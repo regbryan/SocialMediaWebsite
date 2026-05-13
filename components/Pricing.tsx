@@ -1,17 +1,23 @@
+import CheckoutButton from "@/components/CheckoutButton";
+
 type Plan = {
   name: string;
+  // Stripe tier identifier — `null` for the contact-sales tier.
+  tier: "starter" | "growth" | null;
   price: string;
   period: string;
   description: string;
   features: string[];
   cta: string;
-  href: string;
+  // Fallback link when tier is null (Agency → contact form).
+  href?: string;
   popular?: boolean;
 };
 
 const plans: Plan[] = [
   {
     name: "Starter",
+    tier: "starter",
     price: "$497",
     period: "/mo",
     description: "For small businesses building a consistent presence.",
@@ -23,10 +29,10 @@ const plans: Plan[] = [
       "Email support",
     ],
     cta: "Get Started",
-    href: "#contact",
   },
   {
     name: "Growth",
+    tier: "growth",
     price: "$997",
     period: "/mo",
     description: "For brands serious about growing across platforms.",
@@ -39,11 +45,11 @@ const plans: Plan[] = [
       "Content strategy calls",
     ],
     cta: "Get Started",
-    href: "#contact",
     popular: true,
   },
   {
     name: "Agency",
+    tier: null,
     price: "Custom",
     period: "",
     description: "Full-service content production for agencies.",
@@ -152,18 +158,26 @@ function PlanCard({ plan }: { plan: Plan }) {
         ))}
       </ul>
 
-      <a
-        href={plan.href}
-        className={plan.popular ? "sp-shiny" : "sp-shiny sp-shiny--secondary"}
-        style={{
-          display: "block",
-          textAlign: "center",
-          textDecoration: "none",
-          marginTop: "auto",
-        }}
-      >
-        {plan.cta} →
-      </a>
+      {plan.tier ? (
+        <CheckoutButton
+          tier={plan.tier}
+          label={plan.cta}
+          variant={plan.popular ? "primary" : "secondary"}
+        />
+      ) : (
+        <a
+          href={plan.href ?? "#contact"}
+          className={plan.popular ? "sp-shiny" : "sp-shiny sp-shiny--secondary"}
+          style={{
+            display: "block",
+            textAlign: "center",
+            textDecoration: "none",
+            marginTop: "auto",
+          }}
+        >
+          {plan.cta} →
+        </a>
+      )}
     </article>
   );
 }
