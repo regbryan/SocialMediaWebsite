@@ -37,25 +37,29 @@ export default async function KitLayout({
 
   return (
     <div className="space-y-6">
-      <div className="space-y-3">
-        <Link
-          href="/dashboard"
-          className="text-xs text-muted-foreground hover:text-foreground"
-        >
-          ← All brand kits
-        </Link>
-        <div className="flex flex-wrap items-baseline justify-between gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {kit.name as string}
-          </h1>
-          <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
-            {kit.slug as string}
-          </span>
-        </div>
-        <div
-          className="border-b pb-1"
-          style={{ borderColor: "#1a1a2e" }}
-        >
+      <div
+        className="sticky top-[57px] z-30 -mx-4 border-b backdrop-blur sm:-mx-6"
+        style={{
+          borderColor: "#1a1a2e",
+          backgroundColor: "rgba(7,7,14,0.92)",
+        }}
+      >
+        <div className="px-4 pt-3 sm:px-6">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <Link
+              href="/dashboard"
+              className="text-xs text-muted-foreground hover:text-foreground"
+              title="All brand kits"
+            >
+              ←
+            </Link>
+            <h1 className="text-lg font-semibold tracking-tight sm:text-xl">
+              {kit.name as string}
+            </h1>
+            <span className="hidden text-[11px] uppercase tracking-wider text-muted-foreground sm:inline">
+              {kit.slug as string}
+            </span>
+          </div>
           <KitNav slug={slug} />
         </div>
       </div>

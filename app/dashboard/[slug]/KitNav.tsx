@@ -4,13 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 /**
- * Sub-navigation rendered by the kit layout — lets the operator jump
- * between Overview, Previews, Content, Calendar, Edit, and Assets from
- * any page within a single brand kit without bouncing through the
- * kit-detail page.
+ * Sticky tab bar rendered by the kit layout. Always visible while
+ * scrolling so the operator can jump between Overview · Previews ·
+ * Content · Calendar · Edit · Assets without losing their place.
  *
- * Active state is computed off `usePathname()` so the highlight stays
- * accurate across client-side route changes.
+ * Active state uses a purple underline + brighter text. Active state
+ * is computed off `usePathname()` so it updates on client-side
+ * navigation. Longest-suffix match handles nested routes
+ * (e.g. /content/foo still highlights Content).
  */
 const SECTIONS = [
   { label: "Overview", suffix: "" },
@@ -25,7 +26,6 @@ export default function KitNav({ slug }: { slug: string }) {
   const pathname = usePathname() ?? "";
   const base = `/dashboard/${slug}`;
 
-  // Match the longest suffix to handle e.g. "/content" vs "/content/foo".
   const activeSuffix = (() => {
     let match = "";
     for (const s of SECTIONS) {
@@ -40,7 +40,11 @@ export default function KitNav({ slug }: { slug: string }) {
   })();
 
   return (
-    <nav className="-mx-1 flex flex-wrap items-center gap-0.5 overflow-x-auto">
+    <nav
+      role="tablist"
+      className="flex items-stretch gap-0 overflow-x-auto"
+      aria-label="Kit sections"
+    >
       {SECTIONS.map((s) => {
         const href = `${base}${s.suffix}`;
         const active = s.suffix === activeSuffix;
@@ -48,14 +52,26 @@ export default function KitNav({ slug }: { slug: string }) {
           <Link
             key={s.label}
             href={href}
-            className="rounded-md px-3 py-1.5 text-sm transition-colors"
+            role="tab"
+            aria-selected={active}
+            className="relative whitespace-nowrap px-4 py-3 text-sm transition-colors"
             style={{
-              color: active ? "#b18bff" : "rgb(170 170 180)",
-              background: active ? "rgba(139,92,255,0.10)" : "transparent",
+              color: active ? "white" : "rgb(170 170 180)",
               fontWeight: active ? 600 : 500,
             }}
           >
             {s.label}
+            <span
+              aria-hidden
+              className="absolute inset-x-3 -bottom-px h-0.5 rounded-t-sm transition-opacity"
+              style={{
+                background: "#8b5cff",
+                opacity: active ? 1 : 0,
+                boxShadow: active
+                  ? "0 0 12px rgba(139,92,255,0.5)"
+                  : undefined,
+              }}
+            />
           </Link>
         );
       })}
