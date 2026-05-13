@@ -15,11 +15,11 @@ import { usePathname } from "next/navigation";
  */
 const SECTIONS = [
   { label: "Overview", suffix: "" },
-  { label: "Previews", suffix: "/previews" },
-  { label: "Content", suffix: "/content" },
   { label: "Calendar", suffix: "/calendar" },
-  { label: "Edit", suffix: "/edit" },
+  { label: "Designs", suffix: "/content" },
+  { label: "Brand Kit", suffix: "/edit" },
   { label: "Assets", suffix: "/assets" },
+  { label: "Previews", suffix: "/previews" },
 ] as const;
 
 export default function KitNav({ slug }: { slug: string }) {
