@@ -16,7 +16,7 @@ const services: Service[] = [
     description: "Branded posts and stories that feel consistent but never boring.",
     image: "/portfolio/v5_03_pet_hair.png",
     cta: "Book Feed Posts",
-    href: "/start",
+    href: "#contact",
   },
   {
     title: "Carousels",
@@ -24,7 +24,7 @@ const services: Service[] = [
     description: "Swipeable educational decks that drive saves, shares, and follows.",
     image: "/portfolio/v1_01_bright_canary_explainer.png",
     cta: "Book Carousels",
-    href: "/start",
+    href: "#contact",
   },
   {
     title: "Reels & Shorts",
@@ -32,7 +32,7 @@ const services: Service[] = [
     description: "Trend-aware short video, scripted, edited, and posted end-to-end.",
     image: "/portfolio/v6_07_mothers_day.png",
     cta: "Book Reels",
-    href: "/start",
+    href: "#contact",
   },
   {
     title: "LinkedIn",
@@ -40,7 +40,7 @@ const services: Service[] = [
     description: "Thought-leadership posts that build trust and drive inbound.",
     image: "/portfolio/v1_13_referral.png",
     cta: "Book LinkedIn",
-    href: "/start",
+    href: "#contact",
   },
   {
     title: "Paid Social Ads",
@@ -48,7 +48,7 @@ const services: Service[] = [
     description: "Meta, TikTok, and LinkedIn ads with organic-feel creative.",
     image: "/portfolio/omega-tax.png",
     cta: "Book Paid Ads",
-    href: "/start",
+    href: "#contact",
   },
   {
     title: "Community",
@@ -56,7 +56,7 @@ const services: Service[] = [
     description: "Comment and DM management that keeps your audience engaged.",
     image: "/portfolio/scboardwalk-ride.png",
     cta: "Book Community",
-    href: "/start",
+    href: "#contact",
   },
   {
     title: "Strategy",
@@ -64,7 +64,7 @@ const services: Service[] = [
     description: "Positioning, content pillars, and a 90-day roadmap.",
     image: "/portfolio/v2_02_myth_20pct.png",
     cta: "Book Strategy",
-    href: "/start",
+    href: "#contact",
   },
 ];
 

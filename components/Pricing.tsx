@@ -23,7 +23,7 @@ const plans: Plan[] = [
       "Email support",
     ],
     cta: "Get Started",
-    href: "/start?plan=starter",
+    href: "#contact",
   },
   {
     name: "Growth",
@@ -39,7 +39,7 @@ const plans: Plan[] = [
       "Content strategy calls",
     ],
     cta: "Get Started",
-    href: "/start?plan=growth",
+    href: "#contact",
     popular: true,
   },
   {
@@ -55,7 +55,7 @@ const plans: Plan[] = [
       "Custom reporting & strategy",
     ],
     cta: "Contact Us",
-    href: "/start?plan=agency",
+    href: "#contact",
   },
 ];
 

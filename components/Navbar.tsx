@@ -73,7 +73,7 @@ export default function Navbar() {
         >
           Client Login
         </a>
-        <ShinyButton onClick={() => (window.location.href = "/start")}>
+        <ShinyButton onClick={() => (window.location.href = "#contact")}>
           Get Started
         </ShinyButton>
       </div>
@@ -173,7 +173,7 @@ export default function Navbar() {
             Client Login
           </a>
           <a
-            href="/start"
+            href="#contact"
             className="sp-shiny"
             style={{
               display: "block",
